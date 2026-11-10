@@ -290,7 +290,11 @@ header{background:rgba(238,243,255,.92)!important;border-bottom:1px solid #C9D5F
 .whero.hallh .stats b{display:block;font-size:22px}.whero.hallh .stats small{font-size:12px;opacity:.9}
 .linkb{background:none;border:0;padding:0;color:#3a2600;text-decoration:underline;font-weight:900;font-size:12px}
 .hero{background:radial-gradient(circle at 88% 15%,rgba(255,255,255,.22),transparent 42%),linear-gradient(135deg,#2E3C99 0%,#4A5FD0 55%,#6E9BEA 100%)}
-header{padding-top:env(safe-area-inset-top)}main{padding-bottom:16px}.copy{max-width:720px;margin:0 auto;padding:8px 16px calc(80px + env(safe-area-inset-bottom));text-align:center;font-size:12px;color:#6C78A8;letter-spacing:.3px}</style>
+header{padding-top:env(safe-area-inset-top)}main{padding-bottom:16px}.copy{max-width:720px;margin:0 auto;padding:8px 16px calc(80px + env(safe-area-inset-bottom));text-align:center;font-size:12px;color:#6C78A8;letter-spacing:.3px}.modal{height:100vh;height:100dvh;align-items:flex-end}
+.modal .sheet{max-height:calc(100vh - 16px);max-height:calc(100dvh - 16px);overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+.modal .opt{padding:12px 14px;min-height:48px;font-size:16px}
+@media (min-width:760px) and (min-height:500px){.modal{align-items:center}.modal .sheet{border-radius:22px;border-bottom:2px solid #3B3456;max-height:calc(100dvh - 48px)}}
+</style>
 </head>
 <body>
 <header><div class="top">
@@ -954,10 +958,10 @@ function openEvent(e){
        <div style="height:12px"></div><button class="btn full" id="back">繼續值班 →</button>`:''}</div>`;
     m.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const c=opts[+b.dataset.k];const ok2=c===e.q.answer;e.status='done';
       const left=Math.max(0,e.deadline-shift.t);if(ok2){shift.correct++;shift.points+=100+Math.round(left)}else{shift.wrong++;shift.points+=10}shift.flash={e:ok2?'happy':'soul',until:Date.now()+2600};
-      shift.items.push({q:e.q.id||('shift:'+e.title),ok:ok2});shift.t+=6;updateShift();draw(c)});
+      shift.items.push({q:e.q.id||('shift:'+e.title),ok:ok2});shift.t+=6;updateShift();draw(c);setTimeout(()=>{const fb=m.querySelector('.fb');if(fb)fb.scrollIntoView({behavior:'smooth',block:'start'})},60)});
     const bk=m.querySelector('#back');if(bk)bk.onclick=()=>{m.remove();shift.busy=false;if(shift.t>=SHIFT_LEN)return endShift();checkDeadlines();updateShift()};
   };
-  draw(null);document.body.appendChild(m);
+  draw(null);document.body.appendChild(m);m.querySelector('.sheet').scrollTop=0;
 }
 async function endShift(){
   if(!shift||shift.over) return; shift.over=true; stopShift();
