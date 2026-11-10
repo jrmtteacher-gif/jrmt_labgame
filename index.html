@@ -466,7 +466,7 @@ body[data-view=shift] main#app{display:flex;flex-direction:column;overflow:hidde
  .whero.wel .labbg{height:44%}
 }
 @media (min-width:900px) and (max-height:760px){.whero.wel .feats{gap:5px;margin-top:10px}.whero.wel .feat{padding:5px 10px}.whero.wel .feat small{display:none}}
-.whero.wel .labbg{-webkit-mask-image:linear-gradient(to bottom,transparent,#000 35%);mask-image:linear-gradient(to bottom,transparent,#000 35%)}header{padding-top:env(safe-area-inset-top)}.copy{max-width:1180px;margin:0 auto;text-align:center;color:#6C78A8;letter-spacing:.3px;width:100%}</style>
+.whero.wel .labbg{-webkit-mask-image:linear-gradient(to bottom,transparent,#000 35%);mask-image:linear-gradient(to bottom,transparent,#000 35%)}.plist.dev{max-height:none}.joinwrap.list .plist#plist{flex:none;min-height:0}.joinwrap.list .pcard{flex:none}header{padding-top:env(safe-area-inset-top)}.copy{max-width:1180px;margin:0 auto;text-align:center;color:#6C78A8;letter-spacing:.3px;width:100%}</style>
 </head>
 <body>
 <header><div class="top">
@@ -1241,17 +1241,24 @@ function welcomeHero(title,sub){return `<div class="whero wel"><span class="labb
  <span class="tag2">🔬 醫檢師養成計畫</span><h2>${title}</h2><p>${sub}</p>
  <div class="feats"><span class="feat"><b>📚 學習模式</b><small>六大科室闖關、集章拿證書</small></span><span class="feat"><b>🌙 值班模式</b><small>00:00–08:00 大夜班模擬</small></span><span class="feat"><b>📝 回饋</b><small>玩完填問卷，一起把遊戲變更好</small></span></div>
  <span class="duo"><img src="${HALF.f}" alt=""><img src="${HALF.m}" alt=""></span></div>`}
+function devicePlayers(){const all=allPlayers();const ids=LS.get('dl_players',[]).map(p=>p.id);return ids.map(id=>all.find(p=>p.id===id)).filter(Boolean).slice(0,4)}
 function renderJoin(app){
-  const L=allPlayers();
+  const L=allPlayers(), D=devicePlayers();
   if(joinMode==='new'||(!L.length&&joinMode!=='admin')) return renderNewPlayer(app);
   app.innerHTML=`<div class="joinwrap list">${welcomeHero('歡迎來到細節實驗室','檢驗的品質，藏在細節裡。<br>點你的名字進入；第一次來請先建立玩家。')}
-  <div class="card pcard"><div class="row" style="justify-content:space-between;margin-bottom:10px"><h3 style="margin:0">選擇你的名字</h3>${L.length>8?'<input type="text" id="pq" placeholder="🔍 搜尋名字" style="width:150px;padding:8px 10px;font-size:14px">':''}</div>
-   <div class="plist" id="plist">${plistHtml(L)}</div>
-   <div style="height:10px"></div><button class="btn acc full" id="newp">＋ 建立新玩家</button></div>
+  <div class="card pcard">
+   ${D.length?`<h3 style="margin:0 0 8px">這台裝置玩過的人</h3><div class="plist dev">${plistHtml(D)}</div>`:''}
+   <h3 style="margin:${D.length?'14px':'0'} 0 8px">${D.length?'不是你？找自己的名字':'找自己的名字'}</h3>
+   <input type="text" id="pq" placeholder="🔍 輸入你的姓名" autocomplete="off">
+   <div class="plist" id="plist" style="margin-top:8px"><p class="muted" style="margin:4px 0">輸入姓名後，點你的名字進入</p></div>
+   <div style="height:10px"></div><button class="btn acc full" id="newp">＋ 第一次來？建立新玩家</button></div>
   ${adminCard()}</div>`;
-  bindPlist(app,L);
+  app.querySelectorAll('.plist.dev [data-pid]').forEach(b=>b.onclick=()=>{const p=L.find(x=>x.id===b.dataset.pid);if(p)enterAs(p)});
   $('#newp').onclick=()=>{joinMode='new';joinDraft=null;render()};
-  const q=$('#pq'); if(q) q.oninput=()=>{const k=q.value.trim();$('#plist').innerHTML=plistHtml(L.filter(p=>p.name.includes(k)));bindPlist(app,L)};
+  const q=$('#pq'); q.oninput=()=>{const k=q.value.trim();const box=$('#plist');
+    if(!k){box.innerHTML='<p class="muted" style="margin:4px 0">輸入姓名後，點你的名字進入</p>';return}
+    const R=L.filter(p=>p.name.includes(k)).slice(0,8);
+    box.innerHTML=R.length?plistHtml(R):'<p class="muted" style="margin:4px 0">找不到這個名字，第一次來請按下方建立新玩家</p>';bindPlist(app,L)};
   bindAdmin(app);
 }
 function plistHtml(L){return L.map(p=>{const c={sex:p.char?.sex||'f',name:p.char?.name||p.name};return `<button class="pchip" data-pid="${esc(p.id)}"><span class="pp">${charPortrait(c,'normal')}</span><b>${esc(p.name)}</b><small>${esc(p.role||'')}</small></button>`}).join('')||'<p class="muted">找不到這個名字</p>'}
@@ -1476,14 +1483,29 @@ function bindBackup(app){
     toast(`✅ 已還原 ${n} 筆${f?`，${f} 筆失敗`:''}`);b.disabled=false;b.textContent='⬆️ 還原到這個版本';delete b.dataset.s;$('#bkin').value=''};
 }
 
+let rosterQ='',rosterRole='';
+function renderRoster(){
+  const L=allPlayers().filter(p=>(!rosterQ||p.name.includes(rosterQ))&&(!rosterRole||p.role===rosterRole));
+  return `<div class="card"><div class="row"><input type="text" id="rq" placeholder="🔍 搜尋姓名" value="${esc(rosterQ)}" style="flex:2;min-width:140px"><select id="rr" style="flex:1;min-width:100px"><option value="">全部身分</option>${ROLES.map(r=>`<option ${r===rosterRole?'selected':''}>${r}</option>`).join('')}</select></div>
+   <p class="muted">共 ${allPlayers().length} 位玩家${rosterQ||rosterRole?`，符合 ${L.length} 位`:''}。刪除名字不會刪掉他的成績紀錄。</p>
+   <div style="overflow-x:auto"><table><tr><th>姓名</th><th>身分</th><th>建立日期</th><th></th></tr>${L.map(p=>`<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.role||'')}</td><td>${p.created?fmtDate(p.created):'—'}</td><td><button class="btn warn sm" data-pdel="${esc(p.id)}">刪</button></td></tr>`).join('')||'<tr><td colspan="4" class="muted">沒有符合的玩家</td></tr>'}</table></div></div>`;
+}
+function bindRoster(app){
+  const q=$('#rq'),r=$('#rr');if(!q)return;
+  q.oninput=()=>{rosterQ=q.value.trim();const pos=q.selectionStart;render();const n=$('#rq');if(n){n.focus();n.setSelectionRange(pos,pos)}};
+  r.onchange=()=>{rosterRole=r.value;render()};
+  app.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=async()=>{if(!b.dataset.s){b.dataset.s=1;b.textContent='確定？';return}
+    const id=b.dataset.pdel;try{await db.doc('players/'+id).delete()}catch(e){}LS.set('dl_players',LS.get('dl_players',[]).filter(x=>x.id!==id));players=players.filter(x=>x.id!==id);toast('已刪除');render()});
+}
 /* ===== 成績（老師／學員） ===== */
 function renderScores(app){
   let rs=results.slice();
   if(!isTeacher){ rs=myResults(); }
   rs.sort((a,b)=>a.ts-b.ts);
   let h=`<h2>${isTeacher?'學員成績總覽':'我的紀錄'}</h2>`;
-  if(isTeacher) h+=`<div class="chips" style="margin-bottom:14px">${[['players','學員'],['satis','滿意度'],['hard','難題分析'],['log','紀錄明細']].map(([k,n])=>`<button class="chip ${scoreTab===k?'on':''}" data-st="${k}">${n}</button>`).join('')}</div>`;
-  if(isTeacher&&scoreTab==='satis') h+=renderSatis();
+  if(isTeacher) h+=`<div class="chips" style="margin-bottom:14px">${[['players','學員'],['roster','玩家名單'],['satis','滿意度'],['hard','難題分析'],['log','紀錄明細']].map(([k,n])=>`<button class="chip ${scoreTab===k?'on':''}" data-st="${k}">${n}</button>`).join('')}</div>`;
+  if(isTeacher&&scoreTab==='roster') h+=renderRoster();
+  else if(isTeacher&&scoreTab==='satis') h+=renderSatis();
   else if(!rs.length) h+=`<div class="card" style="text-align:center"><div style="font-size:40px">📊</div><p class="muted">${isTeacher?'還沒有紀錄。學員闖關後會出現在這裡。':'還沒有紀錄，去闖關吧！'}</p></div>`;
   else {
     const ids=[...new Set(rs.map(r=>r.pid||r.name))];
@@ -1520,6 +1542,7 @@ function renderScores(app){
   app.innerHTML=h;
   app.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{scoreTab=b.dataset.st;render()});
   if($('#svcsv')) $('#svcsv').onclick=svCsv;
+  bindRoster(app);
   if($('#csv')) $('#csv').onclick=()=>{const head='學員,身分,日期時間,類型,項目,房間,答對,題數,正確率(%),印章,提示次數,秒數';
     const lines=rs.map(r=>[r.name,r.role,new Date(r.ts).toLocaleString('zh-TW',{hour12:false}),{level:'闖關',test:'測驗',final:'總複習大挑戰',shift:'值班挑戰',random:'隨機練習'}[r.kind],r.label,ROOMS[r.room]?.name||'',r.score,r.total,r.pct,r.stamp==='gold'?'金章':r.stamp?'印章':'',r.hints,r.dur].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(','));
     copyText([head,...lines].join('\n'))};
