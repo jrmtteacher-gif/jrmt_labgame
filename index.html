@@ -1620,7 +1620,7 @@ function renderBank(app){
   if($('#f_cancel')) $('#f_cancel').onclick=()=>{editing=null;draft=null;renderBank(app)};
   $('#f_save').onclick=async()=>{sync();
     const data={room:d.room,level:d.level.trim()||'第一關',lvOrder:d.lvOrder===''?1:+d.lvOrder,type:d.type,prompt:d.prompt.trim(),hint:d.hint.trim(),explain:d.explain.trim(),inTest:!!d.inTest,order:d.order===''?(questions.filter(q=>q.room===d.room&&q.level===d.level.trim()).length+1):+d.order,created:editing?(questions.find(q=>q.id===editing)?.created||Date.now()):Date.now()};
-    if(d.type==='choice'){const a=d.answer.trim();if(!a)return toast('請填正確答案');const dis=d.distractors.split(/\n|,|，/).map(s=>s.trim()).filter(s=>s&&s!==a);if(!dis.length&&d.room!=='micro')return toast('請至少填一個錯誤選項');data.answer=a;data.options=[a,...dis].slice(0,6);if(d.img)data.img=d.img}
+    if(d.type==='choice'){const a=d.answer.trim();if(!a)return toast('請填正確答案');const dis=d.distractors.split('\n').map(s=>s.trim()).filter(s=>s&&s!==a);if(!dis.length&&d.room!=='micro')return toast('請至少填一個錯誤選項');data.answer=a;data.options=[a,...dis].slice(0,6);if(d.img)data.img=d.img}
     if(d.type==='sort'){const items=d.items.split('\n').map(s=>s.trim()).filter(Boolean);if(items.length<3)return toast('排序題至少要 3 個項目');data.items=items.slice(0,8)}
     if(d.type==='spot'){if(!d.img)return toast('請放一張圖片');if(!d.spot)return toast('請在圖片上點出錯誤位置');data.img=d.img;data.spot={x:d.spot.x,y:d.spot.y,r:d.r/100}}
     const b=$('#f_save');b.disabled=true;b.textContent='儲存中…';
