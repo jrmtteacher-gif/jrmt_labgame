@@ -1,0 +1,38 @@
+rules_version = '2';
+// 細節實驗室：Firestore 安全規則
+// 貼到 Firebase 主控台 → Firestore Database → 規則，按「發布」
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn() && request.auth.token.email != null
+        && request.auth.token.email.lower() in ['jrmtteacher@gmail.com'];
+    }
+
+    // 題庫、題目圖片、值班情境、問卷題目：大家可以讀，只有管理員能改
+    match /questions/{id}   { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /qimages/{id}     { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /shiftEvents/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /config/{id}      { allow read: if signedIn(); allow write: if isAdmin(); }
+
+    // 玩家名單：大家可以讀、建立自己的名字；只有管理員能刪
+    match /players/{id} {
+      allow read, create, update: if signedIn();
+      allow delete: if isAdmin();
+    }
+
+    // 闖關與值班紀錄：玩家只能新增，不能改；管理員可以看全部、刪除
+    match /results/{id} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // 滿意度問卷：每台裝置只能寫、讀自己那一份；管理員可以看全部
+    match /surveys/{id} {
+      allow read: if isAdmin() || (signedIn() && id == request.auth.uid);
+      allow create, update: if isAdmin() || (signedIn() && id == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+  }
+}
