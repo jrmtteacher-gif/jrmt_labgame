@@ -478,6 +478,10 @@ body[data-view=bank] main#app{max-width:1180px;overflow:hidden}
 .grade{font-size:84px;font-weight:900;line-height:1;margin:6px 0 2px}
 .grade.gS{color:#FFD66B;text-shadow:0 0 24px rgba(255,214,107,.6)}.grade.gA{color:#8FD3FF}.grade.gB{color:#B9E6A0}.grade.gC{color:#C9CEF2}
 @media (max-width:520px){.diffs{grid-template-columns:1fr;gap:6px}.diff{display:flex;gap:8px;align-items:baseline;padding:6px 10px}.diff b{white-space:nowrap;min-width:48px}.diff small{margin:0}.night .ichar{display:none}.lb{margin:8px 0;padding:8px 10px}}
+.slogan{background:linear-gradient(90deg,#3A4AA6,#6C7BD9);color:#fff;font-weight:900;border-radius:14px;padding:8px 14px;margin-bottom:10px;text-align:center;letter-spacing:1px;font-size:15px;box-shadow:0 3px 0 rgba(30,39,102,.25)}
+@media (min-width:900px){.slogan{font-size:17px;padding:10px 16px}}
+.imgimp{margin-top:14px;padding:12px;border:2px dashed var(--line,#E4E0D2);border-radius:14px;background:#FAFAF6}
+.imgimp code{background:#EEF0F8;border-radius:6px;padding:0 4px}
 /* 房間 */
 body[data-view=room] main#app>div:nth-child(2) .scene{height:clamp(70px,14dvh,190px)}
 .lv{padding:9px 12px;margin-bottom:8px}
@@ -582,7 +586,7 @@ body[data-view=shift] main#app{display:flex;flex-direction:column;overflow:hidde
   <span id="tabs" class="row" style="gap:6px"></span>
 </div></header>
 <main id="app"><div class="card" style="text-align:center"><p class="muted">實驗室開門中…</p></div></main>
-<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v22</footer>
+<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v24</footer>
 <div class="toast" id="toast"></div>
 <div id="instbar" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:70;background:#1E2550;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;line-height:1.5">
   <div style="display:flex;gap:10px;align-items:center"><img src="icon-192.png" alt="" style="width:40px;height:40px;border-radius:10px"><div style="flex:1" id="insttxt"></div>
@@ -929,7 +933,7 @@ function renderHall(app){
     <button class="hbtn" id="final" style="${allDone?'':'opacity:.55'}"><b>${allDone?'🏆':'🔒'} 總複習大挑戰</b><small>${allDone?'全部房間隨機 10 題':'集滿所有印章才解鎖'}</small></button>
     <button class="hbtn" id="certb" style="${allDone?'':'opacity:.55'}"><b>${allDone?'📜':'🔒'} 細節偵探證書</b><small>${allDone?'恭喜！點我領取':'集滿所有印章才能領'}</small></button>
   </div>`;
-  app.innerHTML=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol">${P}</div>${svBar()}</div>`;
+  app.innerHTML=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol"><div class="slogan">📚 題目參考十年內國考題</div>${P}</div>${svBar()}</div>`;
   app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;LS.set('dl_mode',mode);render()});
   app.querySelectorAll('[data-room]').forEach(b=>b.onclick=()=>{roomSel=b.dataset.room;go('room')});
   $('#svb').onclick=()=>go('survey');
@@ -1536,41 +1540,61 @@ function renderSvEdit(app){
 }
 
 /* ===== 批次匯入 ===== */
-let impRows=null, impRoom='collect', impLevel='';
+let impRows=null, impRoom='collect', impLevel='', impImgs=new Map();
+const IMGRE=/\.(jpe?g|png|gif|webp|bmp|heic)$/i;
+const imgKey=n=>String(n||'').trim().toLowerCase();
+const imgBase=n=>imgKey(n).replace(IMGRE,'');
+function findImg(n){if(!n)return null;return impImgs.get(imgKey(n))||[...impImgs.values()].find(f=>imgBase(f.name)===imgBase(n))||null}
+const photoAnswer=n=>String(n).replace(IMGRE,'').replace(/[\s_\-]*[\(（]?\d+[\)）]?$/,'').replace(/[_]+/g,' ').trim();
 function loadXLSX(){return new Promise((res,rej)=>{if(window.XLSX)return res(window.XLSX);const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>res(window.XLSX);s.onerror=rej;document.head.appendChild(s)})}
 function parseCSV(t){const rows=[];let r=[],c='',q=false;for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}else if(ch==='"')q=true;else if(ch===','){r.push(c);c=''}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;r.push(c);rows.push(r);r=[];c=''}else c+=ch}if(c||r.length){r.push(c);rows.push(r)}return rows}
 function parseTable(text){text=text.replace(/\r\n?/g,'\n').trim();if(!text)return[];return text.includes('\t')?text.split('\n').map(l=>l.split('\t')):parseCSV(text)}
 const ROOM_ALIAS={'採檢室':'collect','生理檢查室':'collect','採檢':'collect','生理':'collect','採檢與生理檢查室':'collect','血液組':'blood','血液':'blood','鏡檢':'micro'};
 const ROOM_BY_NAME=n=>{n=String(n||'').trim();if(!n)return null;if(ROOM_ALIAS[n])return ROOM_ALIAS[n];return Object.keys(ROOMS).find(k=>ROOMS[k].name===n||ROOMS[k].name.replace('組','').replace('室','')===n.replace('組','').replace('室',''))||null};
 function rowsToQs(rows){
-  const out=[],errs=[];
+  const out=[],errs=[],warns=[];
   rows.forEach((r,i)=>{r=r.map(x=>String(x??'').trim());if(!r.some(Boolean))return;if(i===0&&/題目/.test(r.join('')))return;
-    const [prompt,answer,d1,d2,d3,explain,level,room,hint]=r;
+    const [prompt,answer,d1,d2,d3,explain,level,room]=r;const tail=r.slice(8);const imgName=tail.find(x=>IMGRE.test(x))||'';const hint=tail.find(x=>x&&!IMGRE.test(x))||'';
     if(!prompt||!answer){errs.push(`第 ${i+1} 行：缺少題目或正確答案`);return}
     const dis=[d1,d2,d3].filter(x=>x&&x!==answer); if(!dis.length){errs.push(`第 ${i+1} 行：至少要有一個錯誤選項`);return}
     const rm=ROOM_BY_NAME(room)||impRoom;
-    out.push({room:rm,level:(level||impLevel||'隨機題庫').trim(),type:'choice',prompt,answer,options:[answer,...dis],explain:explain||'',hint:hint||''});});
-  return {qs:out,errs};
+    const q={room:rm,level:(level||impLevel||'隨機題庫').trim(),type:'choice',prompt,answer,options:[answer,...dis],explain:explain||'',hint:hint||''};
+    if(imgName){const f=findImg(imgName);if(f)q.imgFile=f;else warns.push(`第 ${i+1} 行：找不到圖片「${imgName}」（會先匯入文字）`)}
+    out.push(q);});
+  return {qs:out,errs,warns};
 }
+function photosToQs(prompt){const files=[...impImgs.values()];const out=[],errs=[],warns=[];
+  const names=[...new Set(files.map(f=>photoAnswer(f.name)).filter(Boolean))];
+  files.sort((a,b)=>a.name.localeCompare(b.name,'zh-Hant',{numeric:true})).forEach(f=>{const a=photoAnswer(f.name);if(!a){errs.push(`${f.name}：檔名沒有答案`);return}
+    const dis=shuffle(names.filter(n=>n!==a)).slice(0,3);
+    if(!dis.length&&impRoom!=='micro'&&impRoom!=='blood'){errs.push(`${f.name}：需要至少兩種不同的答案（不同檔名）才能互當錯誤選項`);return}
+    out.push({room:impRoom,level:(impLevel||'圖譜判讀').trim(),type:'choice',prompt:prompt||'圖片中的是什麼？',answer:a,options:[a,...dis],explain:'',hint:'',imgFile:f})});
+  if(names.length&&names.length<4&&impRoom!=='micro'&&impRoom!=='blood')warns.push(`只有 ${names.length} 種答案，錯誤選項會少於 3 個；多放幾種不同的照片會更好`);
+  return {qs:out,errs,warns}}
 function importCard(){
   return `<details class="card" id="impd" ${impRows?'open':''}><summary style="font-weight:900;cursor:pointer">📥 批次匯入題目（Excel／CSV）</summary>
   <p class="muted">在 Excel 依下列欄位排好（第一列可以是標題），整段複製貼上，或直接上傳 .xlsx／.csv 檔。</p>
-  <div style="overflow-x:auto"><table class="tpl"><tr><th>A 題目</th><th>B 正確答案</th><th>C 錯誤選項1</th><th>D 錯誤選項2</th><th>E 錯誤選項3</th><th>F 解說</th><th>G 關卡（可空）</th><th>H 科室（可空）</th></tr>
-  <tr><td>紫頭 EDTA 管最常用於？</td><td>CBC</td><td>PT/aPTT</td><td>血糖</td><td>生化</td><td>藍頭→凝血…</td><td>採血基本功</td><td>採檢室</td></tr></table></div>
+  <div style="overflow-x:auto"><table class="tpl"><tr><th>A 題目</th><th>B 正確答案</th><th>C 錯誤選項1</th><th>D 錯誤選項2</th><th>E 錯誤選項3</th><th>F 解說</th><th>G 關卡（可空）</th><th>H 科室（可空）</th><th>I 圖片檔名（可空）</th></tr>
+  <tr><td>紫頭 EDTA 管最常用於？</td><td>CBC</td><td>PT/aPTT</td><td>血糖</td><td>生化</td><td>藍頭→凝血…</td><td>採血基本功</td><td>採檢室</td><td>tube01.jpg</td></tr></table></div>
   <button class="btn ghost sm" id="tplcp" style="margin-top:8px">📋 複製範本（貼到 Excel）</button>
   <label class="f">沒填科室的題目匯入到</label><div class="chips">${Object.entries(ROOMS).map(([k,r])=>`<button class="chip ${impRoom===k?'on':''}" data-iroom="${k}">${r.ic} ${r.name}</button>`).join('')}</div>
   <label class="f">沒填關卡的題目放進關卡</label><input type="text" id="implv" placeholder="隨機題庫" value="${esc(impLevel)}">
   <label class="f">貼上題目</label><textarea id="imptx" style="min-height:120px" placeholder="從 Excel 複製後貼在這裡"></textarea>
   <div class="row" style="margin-top:8px"><label class="btn ghost sm" for="impf">📂 或選擇 .xlsx／.csv 檔</label><input type="file" id="impf" accept=".xlsx,.xls,.csv,.txt" hidden><button class="btn sm" id="impchk">檢查題目</button></div>
+  <div class="imgimp"><b>🖼 一次匯入很多張照片</b>
+   <div class="row" style="margin-top:6px;align-items:center"><label class="btn ghost sm" for="impimg">選擇照片（可多選）</label><input type="file" id="impimg" accept="image/*" multiple hidden><span class="muted" id="impimgn">${impImgs.size?`已選 ${impImgs.size} 張`:'還沒選照片'}</span>${impImgs.size?'<button class="btn ghost sm" id="impimgclr">清除</button>':''}</div>
+   <p class="muted" style="margin:6px 0 0">方法一：Excel 的 I 欄填照片檔名（例如 <code>草酸鈣01.jpg</code>），再選照片，按「檢查題目」會自動配對。<br>方法二：不用 Excel，<b>把照片檔名取成答案</b>（例如 <code>草酸鈣01.jpg</code>、<code>尿酸.jpg</code>），選好照片後按下面的按鈕，其他照片的名稱會自動當錯誤選項。</p>
+   <label class="f">方法二的題目文字</label><input type="text" id="impph" value="圖片中的是什麼？">
+   <button class="btn sm acc" id="impphoto" style="margin-top:8px">📸 用照片直接建題</button></div>
   <div id="impprev">${impRows?impPreview():''}</div></details>`;
 }
-function impPreview(){const {qs,errs}=impRows;const by={};qs.forEach(q=>{const k=ROOMS[q.room].name+'｜'+q.level;by[k]=(by[k]||0)+1});
-  return `<div class="note" style="margin-top:12px;background:${qs.length?'var(--ok-soft)':'var(--bad-soft)'}"><b>可以匯入 ${qs.length} 題</b>${Object.entries(by).map(([k,n])=>`<br>・${esc(k)}：${n} 題`).join('')}${errs.length?`<br><br><b style="color:var(--bad)">有 ${errs.length} 行無法匯入：</b><br>${errs.slice(0,8).map(esc).join('<br>')}${errs.length>8?'<br>…':''}`:''}</div>
-  ${qs.slice(0,3).map(q=>`<div class="wl"><div><b>${esc(q.prompt)}</b><div style="color:var(--ok)">✔ ${esc(q.answer)}</div><div class="muted">✘ ${q.options.slice(1).map(esc).join('、')}</div></div></div>`).join('')}
+function impPreview(){const {qs,errs,warns=[]}=impRows;const ni=qs.filter(q=>q.imgFile).length;const by={};qs.forEach(q=>{const k=ROOMS[q.room].name+'｜'+q.level;by[k]=(by[k]||0)+1});
+  return `<div class="note" style="margin-top:12px;background:${qs.length?'var(--ok-soft)':'var(--bad-soft)'}"><b>可以匯入 ${qs.length} 題${ni?`（其中 ${ni} 題有圖片）`:''}</b>${Object.entries(by).map(([k,n])=>`<br>・${esc(k)}：${n} 題`).join('')}${errs.length?`<br><br><b style="color:var(--bad)">有 ${errs.length} 行無法匯入：</b><br>${errs.slice(0,8).map(esc).join('<br>')}${errs.length>8?'<br>…':''}`:''}${warns.length?`<br><br><b style="color:#B86E0E">注意：</b><br>${warns.slice(0,8).map(esc).join('<br>')}${warns.length>8?'<br>…':''}`:''}</div>
+  ${qs.slice(0,3).map(q=>`<div class="wl">${q.imgFile?`<img src="${URL.createObjectURL(q.imgFile)}" alt="">`:''}<div><b>${esc(q.prompt)}</b><div style="color:var(--ok)">✔ ${esc(q.answer)}</div><div class="muted">✘ ${q.options.slice(1).map(esc).join('、')}</div></div></div>`).join('')}
   ${qs.length?`<button class="btn full" id="impgo" style="margin-top:10px">匯入 ${qs.length} 題</button>`:''}`}
 function bindImport(app){
   const d=$('#impd');if(!d)return;
-  $('#tplcp').onclick=()=>copyText(['題目','正確答案','錯誤選項1','錯誤選項2','錯誤選項3','解說','關卡','科室'].join('\t')+'\n'+['紫頭 EDTA 管最常用於哪一項檢驗？','全血球計數（CBC）','凝血功能（PT、aPTT）','血糖','血清生化','藍頭→凝血；灰頭→血糖；紅頭、黃頭→生化','採血基本功','採檢室'].join('\t'));
+  $('#tplcp').onclick=()=>copyText(['題目','正確答案','錯誤選項1','錯誤選項2','錯誤選項3','解說','關卡','科室','圖片檔名'].join('\t')+'\n'+['紫頭 EDTA 管最常用於哪一項檢驗？','全血球計數（CBC）','凝血功能（PT、aPTT）','血糖','血清生化','藍頭→凝血；灰頭→血糖；紅頭、黃頭→生化','採血基本功','採檢室',''].join('\t'));
   app.querySelectorAll('[data-iroom]').forEach(b=>b.onclick=()=>{impRoom=b.dataset.iroom;app.querySelectorAll('[data-iroom]').forEach(x=>x.classList.toggle('on',x===b));if(impRows)check()});
   $('#implv').oninput=e=>{impLevel=e.target.value};
   let lastRows=null;
@@ -1582,14 +1606,19 @@ function bindImport(app){
       else lastRows=parseTable(await f.text());
       $('#imptx').value=`（已讀取檔案：${f.name}，共 ${lastRows.length} 列）`;check()}catch(err){toast('讀不到這個檔案，請改用複製貼上')}};
   const g=$('#impgo');if(g)g.onclick=doImport;
+  $('#impimg').onchange=e=>{const fs=[...e.target.files].filter(f=>f.type.startsWith('image/')||IMGRE.test(f.name));fs.forEach(f=>impImgs.set(imgKey(f.name),f));
+    $('#impimgn').textContent=`已選 ${impImgs.size} 張`;toast(`已加入 ${fs.length} 張照片`);if(lastRows)check()};
+  if($('#impimgclr'))$('#impimgclr').onclick=()=>{impImgs.clear();impRows=null;renderBank(app)};
+  $('#impphoto').onclick=()=>{if(!impImgs.size)return toast('請先選擇照片');impRows=photosToQs($('#impph').value.trim());$('#impprev').innerHTML=impPreview();const g2=$('#impgo');if(g2)g2.onclick=doImport};
 }
 async function doImport(){
   const {qs}=impRows;const b=$('#impgo');b.disabled=true;let n=0,fail=0;const t0=Date.now();
-  for(const q of qs){b.textContent=`匯入中… ${n+fail+1}/${qs.length}`;
+  for(const q0 of qs){b.textContent=`匯入中… ${n+fail+1}/${qs.length}`;
+    const {imgFile,...q}=q0; if(imgFile){try{const u=await compress(imgFile);if(u)q.img=u;else{fail++;continue}}catch(e){fail++;continue}}
     const data={...q,lvOrder:+(levelsOf(q.room).find(l=>l.name===q.level)?.ord||levelsOf(q.room).length+1)||1,order:n+1,created:t0+n};
     let ok=false;for(let k=0;k<3&&!ok;k++){try{await db.collection('questions').doc('q'+uid()).set(data);ok=true}catch(e){await new Promise(r=>setTimeout(r,1200*(k+1)))}}
     ok?n++:fail++; await new Promise(r=>setTimeout(r,120));}
-  impRows=null;toast(`✅ 匯入 ${n} 題${fail?`，${fail} 題失敗`:''}`);renderBank($('#app'));
+  impRows=null;impImgs.clear();toast(`✅ 匯入 ${n} 題${fail?`，${fail} 題失敗`:''}`);renderBank($('#app'));
 }
 
 /* ===== 值班情境（管理員可編輯） ===== */
