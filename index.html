@@ -371,6 +371,23 @@ body[data-view=hall] main#app,body[data-view=shift] main#app,body[data-view=join
  .whero.hallh p{display:block}
  .whero.hallh .duo img{height:118px}
 }
+
+/* 滿意度調查：固定在最下方 */
+.hallwrap{min-height:100%}
+.hallwrap>.svbar{margin-top:auto!important;width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:10px 14px}
+.svbar .svi{font-size:22px;flex:none}
+.svbar .svt{flex:1;min-width:0}
+.svbar .svt b{display:block;font-size:15px}
+.svbar small{display:block!important;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.svbar .sva{font-size:22px;color:var(--muted);flex:none}
+.halls{grid-template-columns:repeat(2,1fr)!important}
+@media (min-width:900px){
+ .hallwrap{grid-template-rows:1fr auto}
+ .hallwrap>.hcol{grid-column:1;grid-row:1}
+ .hallwrap>.rcol{grid-column:2;grid-row:1 / 3}
+ .hallwrap>.svbar{grid-column:1;grid-row:2;align-self:end}
+ .halls{grid-template-columns:1fr!important}
+}
 /* 房間 */
 body[data-view=room] main#app>div:nth-child(2) .scene{height:clamp(70px,14dvh,190px)}
 .lv{padding:9px 12px;margin-bottom:8px}
@@ -475,7 +492,7 @@ body[data-view=shift] main#app{display:flex;flex-direction:column;overflow:hidde
   <span id="tabs" class="row" style="gap:6px"></span>
 </div></header>
 <main id="app"><div class="card" style="text-align:center"><p class="muted">實驗室開門中…</p></div></main>
-<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v11</footer>
+<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v13</footer>
 <div class="toast" id="toast"></div>
 <div id="instbar" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:70;background:#1E2550;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;line-height:1.5">
   <div style="display:flex;gap:10px;align-items:center"><img src="icon-192.png" alt="" style="width:40px;height:40px;border-radius:10px"><div style="flex:1" id="insttxt"></div>
@@ -776,14 +793,14 @@ function renderHall(app){
     <span class="duo"><img src="${IMG[curChar().sex].b.happy||IMG[curChar().sex].b.full}" alt=""></span>
     <div class="stats"><div><b>⭐ ${st.stars}</b><small>/ ${st.maxStars} 星</small></div><div><b>🏅 ${st.stamps}</b><small>/ ${st.total} 枚章</small></div><div><b>🥇 ${st.gold}</b><small>金章</small></div></div></div>`;
   h+=`<div class="modesw"><button class="${mode==='learn'?'on':''}" data-mode="learn"><i>📚</i>學習模式</button><button class="${mode==='shift'?'on night':''}" data-mode="shift"><i>🌙</i>值班模式</button><button class="${mode==='flow'?'on':''}" data-mode="flow"><i>🔁</i>流程模式</button><button class="${mode==='taf'?'on':''}" data-mode="taf"><i>📋</i>TAF來了</button></div>`;
-  if(mode==='flow'||mode==='taf'){ h=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol">${renderSoon(mode)}</div></div>`; app.innerHTML=h;
+  if(mode==='flow'||mode==='taf'){ h=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol">${renderSoon(mode)}</div>${svBar()}</div>`; app.innerHTML=h; bindSv();
     app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;LS.set('dl_mode',mode);render()}); return; }
-  if(mode==='shift'){ h=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol">${renderShiftIntro()}</div></div>`; app.innerHTML=h;
+  if(mode==='shift'){ h=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol">${renderShiftIntro()}</div>${svBar()}</div>`; app.innerHTML=h; bindSv();
     app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;LS.set('dl_mode',mode);render()});
     $('#startShift').onclick=startShift; return; }
   if(loadedQ && !questions.length){
     h+=`<div class="card" style="text-align:center"><div style="font-size:44px">🧪</div><h3>實驗室還在佈置中</h3><p class="muted">${isTeacher?'到「題庫」新增題目，房間就會出現關卡。':'老師還沒放題目，晚點再來！'}</p></div>`;
-    app.innerHTML=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol"></div></div>`;app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;LS.set('dl_mode',mode);render()});return;
+    app.innerHTML=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol"></div>${svBar()}</div>`;bindSv();app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;LS.set('dl_mode',mode);render()});return;
   }
   const allDone=st.total>0&&st.stamps===st.total;
   let P=`<div class="plan">`;
@@ -797,11 +814,10 @@ function renderHall(app){
   });
   P+=`</div>`;
   h+=`<div class="halls">
-    <button class="hbtn" id="svb"><b>📝 滿意度調查</b><small>${LS.get('dl_sv_'+svType(),null)?'已填寫，謝謝！想修改可以再點進來':(svType()==='staff'?'醫檢師：評估值班遊戲':'告訴我們你在學習模式和值班模式學到什麼')}</small></button>
     <button class="hbtn" id="final" style="${allDone?'':'opacity:.55'}"><b>${allDone?'🏆':'🔒'} 總複習大挑戰</b><small>${allDone?'全部房間隨機 10 題':'集滿所有印章才解鎖'}</small></button>
     <button class="hbtn" id="certb" style="${allDone?'':'opacity:.55'}"><b>${allDone?'📜':'🔒'} 細節偵探證書</b><small>${allDone?'恭喜！點我領取':'集滿所有印章才能領'}</small></button>
   </div>`;
-  app.innerHTML=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol">${P}</div></div>`;
+  app.innerHTML=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol">${P}</div>${svBar()}</div>`;
   app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;LS.set('dl_mode',mode);render()});
   app.querySelectorAll('[data-room]').forEach(b=>b.onclick=()=>{roomSel=b.dataset.room;go('room')});
   $('#svb').onclick=()=>go('survey');
@@ -1017,6 +1033,8 @@ let mode=LS.get('dl_mode','learn'), shift=null, shiftTimer=null;
 const clockStr=t=>{const m=(SHIFT_START+Math.floor(t))%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
 const avatarSvgOld=`<svg viewBox="0 0 38 44" width="38" height="44"><circle cx="19" cy="11" r="8" fill="#FFD9B8"/><path d="M11 9c1-6 15-7 16 0-4-2-12-2-16 0z" fill="#3B2F2A"/><circle cx="16" cy="12" r="1.2" fill="#22212B"/><circle cx="22" cy="12" r="1.2" fill="#22212B"/><path d="M8 40c0-11 4-18 11-18s11 7 11 18z" fill="#fff" stroke="#C9CEF2"/><path d="M19 22v18" stroke="#C9CEF2"/><rect x="21" y="27" width="5" height="4" rx="1" fill="#5A8DEE"/><rect x="12" y="38" width="5" height="5" rx="2" fill="#3A4AA6"/><rect x="21" y="38" width="5" height="5" rx="2" fill="#3A4AA6"/></svg>`;
 function bestShift(){return myResults().filter(r=>r.kind==='shift').reduce((m,r)=>Math.max(m,r.points||0),null)}
+function svBar(){const done=LS.get('dl_sv_'+svType(),null);return `<button class="hbtn svbar" id="svb"><span class="svi">📝</span><span class="svt"><b>滿意度調查${done?' ✅':''}</b><small>${done?'已填寫，謝謝！':(svType()==='staff'?'醫檢師：評估值班遊戲':'告訴我們你在學習模式和值班模式學到什麼')}</small></span><span class="sva">›</span></button>`}
+function bindSv(){const b=$('#svb');if(b)b.onclick=()=>go('survey')}
 function renderSoon(m){const t=m==='flow'?{ic:'🔁',name:'流程模式',d:'把檢驗科的作業流程一步一步排出來，練習「下一步該做什麼」。'}:{ic:'📋',name:'TAF來了',d:'模擬 TAF 認證評審來訪，練習回答評審提問、找出文件與紀錄。'};
   return `<div class="card soon" style="text-align:center;padding:28px 18px"><div style="font-size:52px;line-height:1">🚧</div><h3 style="margin:12px 0 6px">${t.ic} ${t.name}</h3><div style="display:inline-block;background:#FFE7A8;color:#7A4B00;font-weight:900;border-radius:999px;padding:4px 14px;font-size:14px">建構中</div><p class="muted" style="margin:14px 0 0;line-height:1.6">${t.d}<br>實驗室正在施工，敬請期待！</p></div>`}
 function renderShiftIntro(){
@@ -1026,8 +1044,7 @@ function renderShiftIntro(){
    <ul style="padding-left:18px;margin:8px 0"><li>前 5 件事一件一件來，之後進入<b style="color:#FF8A80">🔥 尖峰時段</b>：2–3 個科室同時出狀況，時限更短</li><li>每件事都有處理時限，越快處理分數越高，逾時扣分</li><li>走路會花時間；精力太低走得更慢，記得去休息室喝咖啡</li><li>天亮結算今晚分數，還有組長留言</li></ul>
    ${best!=null?`<p>你的最佳紀錄：<b style="color:#FFD66B">${best} 分</b></p>`:''}
    <div class="ichar"><span class="pf big">${charPortrait(curChar(),'normal')}</span><span><small style="color:#C9CEF2">今晚值班的是</small><b style="display:block;font-size:20px;color:#fff">${esc(curChar().name)}</b><small style="color:#FFD66B">${curChar().sex==='f'?'女':'男'}醫檢師</small></span></div>
-   <button class="btn acc full" id="startShift">🌙 開始值班</button>
-   <button class="btn full" data-go="survey" style="margin-top:10px;background:rgba(255,255,255,.14)">📝 填寫滿意度調查</button></div>`;
+   <button class="btn acc full" id="startShift">🌙 開始值班</button></div>`;
 }
 const BANK_TITLES={collect:['病房請你協助','採檢有狀況','檢體有疑問'],physio:['檢查需要你確認','生理檢查來電','有一筆檢查要看'],micro:['有一張片子等你看','鏡檢需要判讀','急件抹片'],bloodbank:['血庫有檢體等你','備血有疑問','血庫來電'],chem:['急診生化來電','生化結果有疑問','急件生化檢體'],immuno:['急診免疫急件','快篩結果有疑問','免疫檢驗要確認']};
 function buildPool(){
