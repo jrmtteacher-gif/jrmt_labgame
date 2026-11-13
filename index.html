@@ -559,7 +559,7 @@ body[data-view=shift] main#app{display:flex;flex-direction:column;overflow:hidde
   <span id="tabs" class="row" style="gap:6px"></span>
 </div></header>
 <main id="app"><div class="card" style="text-align:center"><p class="muted">實驗室開門中…</p></div></main>
-<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v16</footer>
+<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v17</footer>
 <div class="toast" id="toast"></div>
 <div id="instbar" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:70;background:#1E2550;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;line-height:1.5">
   <div style="display:flex;gap:10px;align-items:center"><img src="icon-192.png" alt="" style="width:40px;height:40px;border-radius:10px"><div style="flex:1" id="insttxt"></div>
@@ -644,15 +644,16 @@ window.__fbInit({fs,auth,onAuthStateChanged,signInAnonymously,signInWithEmailAnd
 <script>
 /* ===== 設定 ===== */
 const ROOMS = {
-  collect:{name:'採檢室',ic:'💉',c:'var(--r1)',s:'var(--r1s)',d:'抽血、採檢流程的細節'},
-  physio:{name:'生理檢查室',ic:'💓',c:'var(--r2)',s:'var(--r2s)',d:'心電圖、生理檢查找錯'},
-  micro:{name:'鏡檢室',ic:'🔬',c:'var(--r3)',s:'var(--r3s)',d:'血液、寄生蟲、尿沉渣圖譜'},
+  collect:{name:'採檢與生理檢查室',ic:'💉',c:'var(--r1)',s:'var(--r1s)',d:'抽血、採檢、心電圖、肺功能'},
+  blood:{name:'血液組',ic:'🧪',c:'#7B4FC0',s:'#EFE6FA',d:'血球計數、血液抹片、凝血'},
+  micro:{name:'鏡檢室',ic:'🔬',c:'var(--r3)',s:'var(--r3s)',d:'寄生蟲、尿沉渣圖譜'},
   bloodbank:{name:'血庫',ic:'🩸',c:'#B23A48',s:'#FBE3E6',d:'血型、交叉試驗、血品保存'},
   chem:{name:'生化組',ic:'⚗️',c:'#C97A12',s:'#FFF1DC',d:'生化檢驗、干擾與品管'},
   immuno:{name:'血清免疫組',ic:'🧫',c:'#2A8C9C',s:'#DDF3F5',d:'抗原抗體、快篩與判讀'}
 };
 const ROLES = ['實習生','PGY','醫檢師'];
 const TYPE_N = {choice:'選擇題',sort:'排序題',spot:'圖片找錯'};
+const MBANK = ['蛔蟲卵','鉤蟲卵','鞭蟲卵','蟯蟲卵','中華肝吸蟲卵','溶組織阿米巴','大腸阿米巴','梨形鞭毛蟲','草酸鈣結晶','尿酸結晶','三價磷酸鹽結晶','透明圓柱','顆粒圓柱','紅血球圓柱','白血球圓柱','鱗狀上皮細胞','酵母菌'];
 const BANK = ['分節嗜中性球','帶狀嗜中性球','淋巴球','異型淋巴球','單核球','嗜酸性球','嗜鹼性球','芽細胞','有核紅血球','漿細胞','標靶紅血球','裂紅血球','球形紅血球','蛔蟲受精卵','鉤蟲卵','鞭蟲卵','蟯蟲卵','華支睪吸蟲卵','日本住血吸蟲卵','帶狀絛蟲卵','痢疾阿米巴囊體','梨形鞭毛蟲營養體','陰道滴蟲','紅血球','白血球','鱗狀上皮細胞','透明圓柱','顆粒圓柱','紅血球圓柱','草酸鈣結晶','尿酸結晶','三磷酸鹽結晶','酵母菌'];
 const PASS = 0.8;
 const COLORS = ['#3A4AA6','#F0A23B','#2C9A68','#CF4C47','#8A5CC2','#2A9CC4','#E9566A','#6C6878'];
@@ -771,12 +772,32 @@ micro:`<svg class="scene" preserveAspectRatio="xMidYMid slice" viewBox="0 0 200 
  <rect x="14" y="22" width="70" height="5" rx="2" fill="#B9D9C7" stroke="${O}" stroke-width="1.2"/>
  <rect x="20" y="9" width="9" height="13" rx="3" fill="#7CC3E6" stroke="${O}"/><rect x="33" y="12" width="11" height="10" rx="3" fill="#F2C94C" stroke="${O}"/><rect x="48" y="7" width="8" height="15" rx="3" fill="#E9566A" stroke="${O}"/><rect x="60" y="11" width="12" height="11" rx="3" fill="#9B6BD3" stroke="${O}"/>
  <rect x="118" y="10" width="68" height="42" rx="6" fill="#fff" stroke="${O}" stroke-width="1.5"/>
- <circle cx="136" cy="30" r="9" fill="#F7C6CF" stroke="${O}"/><circle cx="136" cy="30" r="4" fill="#9B6BD3"/><circle cx="155" cy="23" r="7" fill="#F7C6CF" stroke="${O}"/><circle cx="168" cy="38" r="8" fill="#F7C6CF" stroke="${O}"/><circle cx="168" cy="38" r="3.5" fill="#6C4BB0"/><circle cx="152" cy="42" r="6" fill="#F7C6CF" stroke="${O}"/><ellipse cx="176" cy="20" rx="5.5" ry="3.5" fill="#E8D49A" stroke="${O}"/>
+ <ellipse cx="135" cy="27" rx="9" ry="6.5" fill="#E8D49A" stroke="${O}"/><ellipse cx="135" cy="27" rx="5" ry="3.5" fill="#C9A85C"/><path d="M126 25q9-6 18 0" stroke="${O}" stroke-width=".8" fill="none"/><ellipse cx="157" cy="22" rx="6" ry="9" transform="rotate(30 157 22)" fill="#F3E3B0" stroke="${O}"/><circle cx="155" cy="20" r="1.4" fill="#A2864A"/><circle cx="159" cy="24" r="1.4" fill="#A2864A"/><polygon points="168,32 178,32 181,40 171,44 165,38" fill="#DDEFFF" stroke="${O}"/><path d="M168 32l3 12M178 32l-7 12" stroke="${O}" stroke-width=".6"/><rect x="128" y="39" width="22" height="7" rx="3.5" fill="#F7C6CF" stroke="${O}"/><circle cx="133" cy="42.5" r="1.3" fill="#C7303F"/><circle cx="139" cy="42.5" r="1.3" fill="#C7303F"/><circle cx="145" cy="42.5" r="1.3" fill="#C7303F"/>
  ${box(4,84,192,32,14,'#BCD9C8','#E3CFA9',`<path d="M68 86v30M132 86v30" stroke="${O}" stroke-width="1.2"/><circle cx="60" cy="100" r="2.4" fill="${O}"/><circle cx="76" cy="100" r="2.4" fill="${O}"/><circle cx="124" cy="100" r="2.4" fill="${O}"/><circle cx="140" cy="100" r="2.4" fill="${O}"/>`)}
  ${scope(24,38,'#5161C0','#3A4AA6')}${scope(84,38,'#3FAE6A','#2C9A68')}
  <rect x="134" y="70" width="30" height="8" rx="2" fill="#fff" stroke="${O}" stroke-width="1.2"/><path d="M140 70v8M146 70v8M152 70v8M158 70v8" stroke="#E9566A" stroke-width="1.4" opacity=".7"/>
  <path d="M176 78c-2-9 0-16 5-21M180 78c0-7 3-12 8-14M178 78c-5-5-9-8-14-8" stroke="#3FAE6A" stroke-width="3" fill="none" stroke-linecap="round"/><rect x="171" y="72" width="16" height="9" rx="2" fill="#F0A23B" stroke="${O}" stroke-width="1.2"/>
  ${glow('sm')}</svg>`,
+blood:`<svg class="scene" preserveAspectRatio="xMidYMid slice" viewBox="0 0 200 128" aria-hidden="true">${shell('sh',{w1:'#F3ECFC',w2:'#E2D6F6',f1:'#CDBDEA',f2:'#E4DAF6',line:'#BAA6E0',base:'#B49BDF'})}
+ <rect x="14" y="10" width="66" height="42" rx="6" fill="#fff" stroke="${O}" stroke-width="1.5"/>
+ <circle cx="30" cy="28" r="8" fill="#F7C6CF" stroke="${O}"/><circle cx="30" cy="28" r="3.6" fill="#F2A5B3"/><circle cx="48" cy="22" r="7" fill="#F7C6CF" stroke="${O}"/><circle cx="48" cy="22" r="3" fill="#F2A5B3"/><circle cx="63" cy="35" r="8.5" fill="#E9DDFB" stroke="${O}"/><path d="M58 33q3-4 6 0t5 2" stroke="#6C4BB0" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="44" cy="41" r="7" fill="#E9DDFB" stroke="${O}"/><circle cx="44" cy="41" r="4.2" fill="#6C4BB0"/><circle cx="71" cy="17" r="2.2" fill="#B48ADF" stroke="${O}" stroke-width=".6"/>
+ <rect x="136" y="16" width="46" height="26" rx="5" fill="#2A3366" stroke="${O}" stroke-width="1.5"/><rect x="140" y="20" width="38" height="18" rx="3" fill="#0E1638"/>
+ <text x="143" y="27" font-size="5" font-weight="700" fill="#B9C4FF" font-family="sans-serif">WBC 7.2</text><text x="143" y="34" font-size="5" font-weight="700" fill="#4BE08A" font-family="sans-serif">Hb 13.5</text>
+ ${box(6,84,188,32,14,'#CBB9EA','#E7DDF7',`<path d="M70 86v30M134 86v30" stroke="${O}" stroke-width="1.2"/><circle cx="62" cy="100" r="2.4" fill="${O}"/><circle cx="78" cy="100" r="2.4" fill="${O}"/><circle cx="126" cy="100" r="2.4" fill="${O}"/><circle cx="142" cy="100" r="2.4" fill="${O}"/>`)}
+ ${box(14,50,70,30,12,'#F4F1FA','#FFFFFF',`<rect x="20" y="56" width="30" height="16" rx="2" fill="#2A3366" stroke="${O}" stroke-width="1.1"/><path d="M24 66l5-5 4 3 5-6 6 4" stroke="#4BE08A" stroke-width="1.4" fill="none"/><rect x="56" y="58" width="22" height="5" rx="2" fill="#D7CDEB" stroke="${O}"/><circle cx="62" cy="70" r="3" fill="#7B4FC0" stroke="${O}"/><circle cx="72" cy="70" r="3" fill="#3FAE6A" stroke="${O}"/>`)}
+ ${box(90,74,40,6,8,'#fff','#F4F1EA')}${tube(95,58,'#9B6BD3')}${tube(103,58,'#9B6BD3')}${tube(111,58,'#5A8DEE')}${tube(119,58,'#9B6BD3')}
+ ${scope(140,38,'#7B4FC0','#5A3A9A')}
+ <rect x="180" y="72" width="14" height="5" rx="1" fill="#fff" stroke="${O}" stroke-width="1"/><rect x="182" y="66" width="14" height="5" rx="1" fill="#fff" stroke="${O}" stroke-width="1"/><rect x="185" y="73" width="6" height="3" rx="1.5" fill="#E9566A" opacity=".7"/>
+ ${glow('sh')}</svg>`,
+opd:`<svg class="scene" preserveAspectRatio="xMidYMid slice" viewBox="0 0 200 128" aria-hidden="true">${shell('so',{w1:'#E8F6F6',w2:'#D0ECEC',f1:'#B6DADB',f2:'#D3EDEE',line:'#9FCBCC',base:'#94C4C6'})}
+ <rect x="20" y="10" width="54" height="24" rx="4" fill="#1F2A44" stroke="${O}" stroke-width="1.5"/><text x="47" y="20" font-size="5.5" font-weight="700" text-anchor="middle" fill="#B9F3F0" font-family="sans-serif">檢驗報到</text><text x="47" y="31" font-size="9" font-weight="800" text-anchor="middle" fill="#FF6B6B" font-family="monospace">037</text>
+ <rect x="96" y="10" width="92" height="44" rx="4" fill="#DFF3FA" stroke="${O}" stroke-width="1.4"/><path d="M142 10v44" stroke="${O}" stroke-width="1.2"/><polygon points="100,14 120,14 104,50 100,50" fill="#fff" opacity=".5"/><polygon points="146,14 166,14 150,50 146,50" fill="#fff" opacity=".5"/>
+ ${box(92,58,100,24,10,'#F2E3C6','#FFF4DE',`<rect x="104" y="64" width="22" height="12" rx="2" fill="#fff" stroke="${O}" stroke-width="1"/><path d="M108 68h14M108 72h10" stroke="#9FB2C8" stroke-width="1.2"/><rect x="140" y="64" width="40" height="5" rx="2" fill="#E5CFA6" stroke="${O}"/>`)}
+ <rect x="150" y="48" width="18" height="8" rx="2" fill="#fff" stroke="${O}" stroke-width="1"/><text x="159" y="54" font-size="4.5" text-anchor="middle" fill="#2A8C9C" font-family="sans-serif" font-weight="700">掛號單</text>
+ ${[10,34,58].map(x=>`<rect x="${x}" y="88" width="20" height="10" rx="3" fill="#5BB8C0" stroke="${O}" stroke-width="1.3"/><rect x="${x}" y="72" width="20" height="17" rx="4" fill="#7FCBD1" stroke="${O}" stroke-width="1.3"/><path d="M${x+3} 98v14M${x+17} 98v14" stroke="${O}" stroke-width="2.6" stroke-linecap="round"/>`).join('')}
+ <ellipse cx="44" cy="114" rx="40" ry="4" fill="#000" opacity=".12"/>
+ <path d="M96 106h90" stroke="#F0A23B" stroke-width="3" stroke-dasharray="6 5" stroke-linecap="round" opacity=".8"/>
+ ${glow('so')}</svg>`,
 bloodbank:`<svg class="scene" preserveAspectRatio="xMidYMid slice" viewBox="0 0 200 128" aria-hidden="true">${shell('sb',{w1:'#FCEBEE',w2:'#F4D0D6',f1:'#DDB0B8',f2:'#F0D2D8',line:'#CF9AA5',base:'#C98B97'})}
  <ellipse cx="54" cy="116" rx="38" ry="5" fill="#000" opacity=".16"/>
  <rect x="18" y="10" width="72" height="104" rx="6" fill="#E8EBF2" stroke="${O}" stroke-width="1.6"/>
@@ -916,7 +937,7 @@ function makeItem(q){
   if(q.type==='choice'){
     let opts=(q.options||[]).map(s=>String(s).trim()).filter(Boolean);
     if(!opts.includes(q.answer)) opts.unshift(q.answer);
-    if(opts.length<4&&q.room==='micro'){for(const s of shuffle(BANK)){if(opts.length>=4)break;if(!opts.includes(s))opts.push(s)}}
+    if(opts.length<4&&(q.room==='micro'||q.room==='blood')){for(const s of shuffle(q.room==='micro'?MBANK:BANK)){if(opts.length>=4)break;if(!opts.includes(s))opts.push(s)}}
     it.opts=shuffle([...new Set(opts)]); it.gone=[];
   }
   if(q.type==='sort'){it.pool=shuffle(q.items.map((s,i)=>({s,i})));it.seq=[]}
@@ -1074,7 +1095,7 @@ function renderCert(app){
 /* ===== 值班模式 ===== */
 const SHIFT_START=0, SHIFT_LEN=480;
 const ZONES={
-  collect:{name:'採檢室'},physio:{name:'生理檢查室'},micro:{name:'鏡檢室'},
+  collect:{name:'採檢室',ic:'💉'},physio:{name:'生理檢查室',ic:'💓'},micro:{name:'OPD',ic:'🏥'},
   bloodbank:{name:'血庫'},analyzer:{name:'急診生化',ic:'🚑'},rest:{name:'休息室',ic:'☕'}
 };
 const SHIFT_EVENTS=[
@@ -1085,7 +1106,7 @@ const SHIFT_EVENTS=[
   {zone:'physio',ic:'💓',title:'病房要做心電圖',story:'病人很緊張、一直發抖，畫面上全是不規則的雜訊。',prompt:'你先怎麼處理？',answer:'請病人放鬆、保暖，手臂平放身體兩側再重做',options:['直接開濾波後出報告','請病人放鬆、保暖，手臂平放身體兩側再重做','把電極壓得更用力','跟病房說機器壞了'],explain:'先處理造成干擾的原因；濾波可能改變波形，使用時要註明。'},
   {zone:'physio',ic:'📈',title:'這張心電圖怪怪的',story:'剛做完的心電圖：Lead I 全部倒置，aVR 卻是正向。',prompt:'你應該怎麼做？',answer:'檢查左右手電極是否接反，重新接好再做一次',options:['直接發報告','檢查左右手電極是否接反，重新接好再做一次','在報告寫「右位心」','只重做胸導'],explain:'左右手反接是最常見的接錯，先排除技術問題再交給醫師判讀。'},
   {zone:'analyzer',ic:'📊',title:'品管跑出來了',story:'今晚第一輪品管，有一個濃度超出平均值 3 個標準差。',prompt:'接下來怎麼做？',answer:'暫停發報告，找出原因並重跑品管，通過後再測病人檢體',options:['先發病人報告，明天再處理','暫停發報告，找出原因並重跑品管，通過後再測病人檢體','把品管目標值調寬','重跑一次，通過就好不用記錄'],explain:'超過 3SD 屬於應拒絕的品管結果（Westgard 1-3s），要排除原因並記錄矯正措施。'},
-  {zone:'micro',ic:'🔬',title:'這張抹片要覆核',story:'急診 CBC 白血球異常高，你在抹片上看到大量疑似芽細胞。',prompt:'你應該怎麼做？',answer:'依規定請資深醫檢師或主管覆核，並通知臨床',options:['依規定請資深醫檢師或主管覆核，並通知臨床','直接發報告，不用備註','當作機器誤差，重跑就好','等白班的人再看'],explain:'疑似芽細胞是需要盡快處理的發現，依單位規定覆核並通知，避免延誤診斷。'},
+  {zone:'analyzer',ic:'🔬',title:'這張抹片要覆核',story:'急診 CBC 白血球異常高，你在抹片上看到大量疑似芽細胞。',prompt:'你應該怎麼做？',answer:'依規定請資深醫檢師或主管覆核，並通知臨床',options:['依規定請資深醫檢師或主管覆核，並通知臨床','直接發報告，不用備註','當作機器誤差，重跑就好','等白班的人再看'],explain:'疑似芽細胞是需要盡快處理的發現，依單位規定覆核並通知，避免延誤診斷。'},
   {zone:'bloodbank',ic:'🚑',title:'急診大量出血',story:'急診病人大量出血，醫師說等不及交叉試驗做完，現在就要血。',prompt:'你應該怎麼處理？',answer:'依院內緊急發血流程發血，並請醫師簽署緊急用血單',options:['拒絕發血，一定要等交叉試驗完成','依院內緊急發血流程發血，並請醫師簽署緊急用血單','隨便拿一袋同血型的先給','請醫師自己來血庫拿'],explain:'緊急用血有固定流程，發血後交叉試驗仍要繼續完成，有異常立即通知醫師。'},
   {zone:'bloodbank',ic:'🌡️',title:'病人輸血中發燒',story:'病房來電：病人輸血 15 分鐘後開始發燒、畏寒。',prompt:'你應該建議病房怎麼做？',answer:'立即停止輸血、保留靜脈通路，將血袋與病人檢體送回血庫調查',options:['把輸血速度調慢就好','先給退燒藥，繼續輸完','立即停止輸血、保留靜脈通路，將血袋與病人檢體送回血庫調查','把血袋丟掉，換一袋新的'],explain:'懷疑輸血反應要立刻停止輸血，保留血袋與輸血器材，並送檢體做輸血反應調查。'},
   {zone:'bloodbank',ic:'🚨',title:'血庫冰箱警報',story:'血庫冰箱的溫度警報響了，顯示 9 °C。',prompt:'你應該怎麼處理？',answer:'確認溫度與原因，必要時把血品移到正常的冰箱並記錄',options:['把警報關掉就好','確認溫度與原因，必要時把血品移到正常的冰箱並記錄','把冰箱溫度調到最低','等白班的人來處理'],explain:'紅血球要保存在 1–6 °C，溫度異常會影響血品安全，處理過程都要留下紀錄。'},
@@ -1114,10 +1135,10 @@ function renderShiftIntro(){
    <div class="ichar"><span class="pf big">${charPortrait(curChar(),'normal')}</span><span><small style="color:#C9CEF2">今晚值班的是</small><b style="display:block;font-size:20px;color:#fff">${esc(curChar().name)}</b><small style="color:#FFD66B">${curChar().sex==='f'?'女':'男'}醫檢師</small></span></div>
    <button class="btn acc full" id="startShift">🌙 開始值班</button></div>`;
 }
-const BANK_TITLES={collect:['病房請你協助','採檢有狀況','檢體有疑問'],physio:['檢查需要你確認','生理檢查來電','有一筆檢查要看'],micro:['有一張片子等你看','鏡檢需要判讀','急件抹片'],bloodbank:['血庫有檢體等你','備血有疑問','血庫來電'],chem:['急診生化來電','生化結果有疑問','急件生化檢體'],immuno:['急診免疫急件','快篩結果有疑問','免疫檢驗要確認']};
+const BANK_TITLES={blood:['CBC 有狀況','抹片要確認','血液組需要你'],collect:['病房請你協助','採檢有狀況','檢體有疑問'],physio:['檢查需要你確認','生理檢查來電','有一筆檢查要看'],micro:['門診檢驗來電','OPD 有狀況','門診檢體要確認'],bloodbank:['血庫有檢體等你','備血有疑問','血庫來電'],chem:['急診生化來電','生化結果有疑問','急件生化檢體'],immuno:['急診免疫急件','快篩結果有疑問','免疫檢驗要確認']};
 function buildPool(){
   const scripted=scenarioList().map(e=>({...e,ic:e.ic||ZIC[e.zone]||'📞',q:{prompt:e.prompt,answer:e.answer,options:e.options,explain:e.explain}}));
-  const zmap=r=>(r==='chem'||r==='immuno')?'analyzer':r;
+  const zmap=r=>(r==='chem'||r==='immuno'||r==='blood')?'analyzer':r;
   const bank=questions.filter(q=>q.type==='choice'&&ZONES[zmap(q.room)]).map(q=>({zone:zmap(q.room),ic:ROOMS[q.room].ic,title:shuffle(BANK_TITLES[q.room]||['有事要處理'])[0],story:'',q:{id:q.id,prompt:q.prompt,answer:q.answer,options:q.options,explain:q.explain,img:q.img}}));
   return shuffle([...scripted,...bank]);
 }
@@ -1158,7 +1179,7 @@ function shiftTick(){
   if(shift.t>=SHIFT_LEN) return endShift();
   updateShift();
 }
-function zoneHtml(k){const ic=ROOMS[k]?.ic||ZONES[k].ic;return `<button class="zone" data-z="${k}">${SCENES[k]}<span class="zl">${ic} ${ZONES[k].name}</span></button>`}
+function zoneHtml(k){const ic=ZONES[k].ic||ROOMS[k]?.ic;return `<button class="zone" data-z="${k}">${k==='micro'?SCENES.opd:SCENES[k]}<span class="zl">${ic} ${ZONES[k].name}</span></button>`}
 function curExpr(){
   if(shift.flash&&Date.now()<shift.flash.until) return shift.flash.e;
   const open=shift.events.filter(e=>e.status==='open'), hot=open.filter(e=>e.deadline-shift.t<=15).length;
@@ -1213,7 +1234,7 @@ function handleEvent(id){
 }
 function openEvent(e){
   let opts=shuffle([...new Set([e.q.answer,...(e.q.options||[])])]);
-  if(opts.length<4&&e.zone==='micro')for(const s of shuffle(BANK)){if(opts.length>=4)break;if(!opts.includes(s))opts.push(s)}
+  if(opts.length<4&&e.zone==='micro')for(const s of shuffle(MBANK)){if(opts.length>=4)break;if(!opts.includes(s))opts.push(s)}
   opts=shuffle(opts);
   const m=document.createElement('div');m.className='modal';
   const draw=(chosen)=>{const done=chosen!=null,ok=chosen===e.q.answer;
@@ -1421,7 +1442,8 @@ let impRows=null, impRoom='collect', impLevel='';
 function loadXLSX(){return new Promise((res,rej)=>{if(window.XLSX)return res(window.XLSX);const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>res(window.XLSX);s.onerror=rej;document.head.appendChild(s)})}
 function parseCSV(t){const rows=[];let r=[],c='',q=false;for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}else if(ch==='"')q=true;else if(ch===','){r.push(c);c=''}else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;r.push(c);rows.push(r);r=[];c=''}else c+=ch}if(c||r.length){r.push(c);rows.push(r)}return rows}
 function parseTable(text){text=text.replace(/\r\n?/g,'\n').trim();if(!text)return[];return text.includes('\t')?text.split('\n').map(l=>l.split('\t')):parseCSV(text)}
-const ROOM_BY_NAME=n=>{n=String(n||'').trim();if(!n)return null;return Object.keys(ROOMS).find(k=>ROOMS[k].name===n||ROOMS[k].name.replace('組','').replace('室','')===n.replace('組','').replace('室',''))||null};
+const ROOM_ALIAS={'採檢室':'collect','生理檢查室':'collect','採檢':'collect','生理':'collect','採檢與生理檢查室':'collect','血液組':'blood','血液':'blood','鏡檢':'micro'};
+const ROOM_BY_NAME=n=>{n=String(n||'').trim();if(!n)return null;if(ROOM_ALIAS[n])return ROOM_ALIAS[n];return Object.keys(ROOMS).find(k=>ROOMS[k].name===n||ROOMS[k].name.replace('組','').replace('室','')===n.replace('組','').replace('室',''))||null};
 function rowsToQs(rows){
   const out=[],errs=[];
   rows.forEach((r,i)=>{r=r.map(x=>String(x??'').trim());if(!r.some(Boolean))return;if(i===0&&/題目/.test(r.join('')))return;
@@ -1479,7 +1501,7 @@ function bankScroll(app){return [...app.querySelectorAll('.bcol')].map(e=>e.scro
 function bankRestore(app,k,formTop){const c=[...app.querySelectorAll('.bcol')];c.forEach((e,i)=>{if(k&&k[i]!=null)e.scrollTop=k[i]});if(formTop){const f=app.querySelector('.bform');if(f)f.scrollTop=0}}
 let shiftEvs=[], shiftEvLoaded=false, bankMode='learn', seDraft=null, seEditing=null;
 const SZONES=['collect','physio','micro','bloodbank','analyzer'];
-const ZIC={collect:'💉',physio:'💓',micro:'🔬',bloodbank:'🩸',analyzer:'🚑'};
+const ZIC={collect:'💉',physio:'💓',micro:'🏥',bloodbank:'🩸',analyzer:'🚑'};
 const zoneName=z=>ZONES[z]?.name||z;
 function scenarioList(){const L=shiftEvs.filter(e=>e.enabled!==false&&SZONES.includes(e.zone)&&e.answer);return L.length?L:SHIFT_EVENTS}
 function bankSwitch(){return `<div class="modesw bsw" style="grid-template-columns:1fr 1fr"><button class="${bankMode==='learn'?'on':''}" data-bm="learn">📚 學習題庫</button><button class="${bankMode==='shift'?'on night':''}" data-bm="shift">🌙 值班情境</button></div>`}
@@ -1524,12 +1546,12 @@ let seImp=null;
 function seImportCard(){return `<details class="card" id="seimpd" ${seImp?'open':''}><summary style="font-weight:900;cursor:pointer">📥 批次匯入值班情境（Excel／CSV）</summary>
   <div style="overflow-x:auto;margin-top:8px"><table class="tpl"><tr><th>A 地點</th><th>B 標題</th><th>C 情境描述</th><th>D 問題</th><th>E 正確做法</th><th>F 錯誤1</th><th>G 錯誤2</th><th>H 錯誤3</th><th>I 解說</th></tr>
   <tr><td>急診生化</td><td>急診護理師來電</td><td>鉀 6.8，要重抽嗎？</td><td>第一步？</td><td>先確認有無溶血</td><td>直接發報告</td><td>…</td><td>…</td><td>溶血會…</td></tr></table></div>
-  <p class="muted">地點填：採檢室、生理檢查室、鏡檢室、血庫、急診生化。</p>
+  <p class="muted">地點填：採檢室、生理檢查室、OPD、血庫、急診生化。</p>
   <button class="btn ghost sm" id="setpl">📋 複製範本</button>
   <label class="f">貼上情境</label><textarea id="setx" style="min-height:100px" placeholder="從 Excel 複製後貼在這裡"></textarea>
   <div class="row" style="margin-top:8px"><label class="btn ghost sm" for="sef">📂 或選擇檔案</label><input type="file" id="sef" accept=".xlsx,.xls,.csv,.txt" hidden><button class="btn sm" id="sechk">檢查</button></div>
   <div id="seprev">${seImp?sePrev():''}</div></details>`}
-function seRows(rows){const out=[],errs=[];const zmap=n=>{n=String(n||'').trim();return SZONES.find(z=>zoneName(z)===n||zoneName(z).replace(/[室組]/g,'')===n.replace(/[室組]/g,''))||(/儀器|生化|急診/.test(n)?'analyzer':null)};
+function seRows(rows){const out=[],errs=[];const zmap=n=>{n=String(n||'').trim();return SZONES.find(z=>zoneName(z)===n||zoneName(z).replace(/[室組]/g,'')===n.replace(/[室組]/g,''))||(/儀器|生化|急診|血液/.test(n)?'analyzer':/鏡檢|門診|OPD/i.test(n)?'micro':null)};
   rows.forEach((r,i)=>{r=r.map(x=>String(x??'').trim());if(!r.some(Boolean))return;if(i===0&&/標題|情境/.test(r.join('')))return;
     const [zn,title,story,prompt,answer,a,b,c,explain]=r;const z=zmap(zn);
     if(!z){errs.push(`第 ${i+1} 行：地點「${zn}」看不懂`);return} if(!title||!answer){errs.push(`第 ${i+1} 行：缺標題或正確做法`);return}
@@ -1688,7 +1710,7 @@ function renderBank(app){
       <label class="f">判定範圍大小：<span id="rv">${d.r}</span>%</label><input type="range" id="f_r" min="3" max="25" value="${d.r}" style="width:100%">`;
   }
   if(d.type==='choice') h+=`<label class="f">正確答案</label><input type="text" id="f_ans" value="${esc(d.answer)}" placeholder="例如：血液培養瓶">
-    <label class="f">錯誤選項 <span class="muted">（一行一個，建議 3 個${d.room==='micro'?'；鏡檢室沒填會自動補':''}）</span></label><textarea id="f_dis" placeholder="紫頭 EDTA 管&#10;綠頭肝素管&#10;灰頭氟化鈉管">${esc(d.distractors)}</textarea>`;
+    <label class="f">錯誤選項 <span class="muted">（一行一個，建議 3 個${d.room==='micro'||d.room==='blood'?'；這個科室沒填會自動補':''}）</span></label><textarea id="f_dis" placeholder="紫頭 EDTA 管&#10;綠頭肝素管&#10;灰頭氟化鈉管">${esc(d.distractors)}</textarea>`;
   if(d.type==='sort') h+=`<label class="f">項目（依「正確順序」一行一個，遊戲中會打亂）</label><textarea id="f_items" style="min-height:140px" placeholder="血液培養瓶&#10;藍頭 檸檬酸鈉管&#10;紅頭／黃頭 血清管">${esc(d.items)}</textarea>`;
   h+=`<label class="f">提示 <span class="muted">（可不填，系統會自動給提示）</span></label><input type="text" id="f_hint" value="${esc(d.hint)}">
     <label class="f">解說 <span class="muted">（答完顯示，寫細節重點）</span></label><textarea id="f_exp">${esc(d.explain)}</textarea>
@@ -1717,7 +1739,7 @@ function renderBank(app){
   if($('#f_cancel')) $('#f_cancel').onclick=()=>{editing=null;draft=null;bankFormOpen=false;renderBank(app)};
   $('#f_save').onclick=async()=>{sync();
     const data={room:d.room,level:d.level.trim()||'第一關',lvOrder:d.lvOrder===''?1:+d.lvOrder,type:d.type,prompt:d.prompt.trim(),hint:d.hint.trim(),explain:d.explain.trim(),inTest:!!d.inTest,order:d.order===''?(questions.filter(q=>q.room===d.room&&q.level===d.level.trim()).length+1):+d.order,created:editing?(questions.find(q=>q.id===editing)?.created||Date.now()):Date.now()};
-    if(d.type==='choice'){const a=d.answer.trim();if(!a)return toast('請填正確答案');const dis=d.distractors.split('\n').map(s=>s.trim()).filter(s=>s&&s!==a);if(!dis.length&&d.room!=='micro')return toast('請至少填一個錯誤選項');data.answer=a;data.options=[a,...dis].slice(0,6);if(d.img)data.img=d.img}
+    if(d.type==='choice'){const a=d.answer.trim();if(!a)return toast('請填正確答案');const dis=d.distractors.split('\n').map(s=>s.trim()).filter(s=>s&&s!==a);if(!dis.length&&d.room!=='micro'&&d.room!=='blood')return toast('請至少填一個錯誤選項');data.answer=a;data.options=[a,...dis].slice(0,6);if(d.img)data.img=d.img}
     if(d.type==='sort'){const items=d.items.split('\n').map(s=>s.trim()).filter(Boolean);if(items.length<3)return toast('排序題至少要 3 個項目');data.items=items.slice(0,8)}
     if(d.type==='spot'){if(!d.img)return toast('請放一張圖片');if(!d.spot)return toast('請在圖片上點出錯誤位置');data.img=d.img;data.spot={x:d.spot.x,y:d.spot.y,r:d.r/100}}
     const b=$('#f_save');b.disabled=true;b.textContent='儲存中…';
@@ -1774,7 +1796,7 @@ function liveRender(){
   if(!db){dbState='none';loadedQ=true;render();return}
   const slow=setTimeout(()=>{if(!loadedQ){dbState='slow';render()}},10000);
   db.collection('questions').onSnapshot(s=>{
-    questions=s.docs.map(d=>({id:d.id,...d.data()})).filter(q=>q.type&&ROOMS[q.room]);
+    questions=s.docs.map(d=>{const q={id:d.id,...d.data()};if(q.room==='physio')q.room='collect';return q}).filter(q=>q.type&&ROOMS[q.room]);
     if(!s.metadata.fromCache){loadedQ=true;clearTimeout(slow);dbState='ok'}
     liveRender();
   },e=>{clearTimeout(slow);dbState='none';loadedQ=true;render()});
