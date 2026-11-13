@@ -460,6 +460,24 @@ body[data-view=bank] main#app{max-width:1180px;overflow:hidden}
 @media (max-width:899px){.drop .pastehint{display:none}}
 .lvhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.lvhead h3{flex:1;min-width:0;margin:0}
 .qlist .lvhead{margin-bottom:6px}
+
+/* 值班挑戰 */
+.pb{display:inline-block;font-style:normal;color:#fff;font-size:11px;font-weight:900;border-radius:999px;padding:1px 7px;margin-right:6px;vertical-align:1px;line-height:1.5}
+.ev.p-red{border-left:5px solid #E5484D}.ev.p-orange{border-left:5px solid #F0A23B}.ev.p-green{border-left:5px solid #3FAE6A}
+.ev.locked{opacity:.55;filter:grayscale(.5)}
+.nrules{padding-left:18px;margin:8px 0;line-height:1.7}
+.diffs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.diff{border:2px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#fff;border-radius:14px;padding:8px 8px;text-align:left;cursor:pointer}
+.diff b{display:block;font-size:15px}.diff small{display:block;font-size:11px;color:#C9CEF2;line-height:1.35;margin-top:2px}
+.diff.on{border-color:#FFD66B;background:rgba(255,214,107,.16)}.diff.on b{color:#FFD66B}
+.lb{background:rgba(255,255,255,.08);border-radius:14px;padding:10px 12px;margin:10px 0}
+.lb>b{color:#FFD66B}
+.lbr{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.08);color:#fff}
+.lbr:last-child{border-bottom:0}.lbr.me{color:#FFD66B}
+.lbn{width:24px;text-align:center;font-weight:900}.lbm{flex:1;min-width:0}.lbm small{color:#C9CEF2;margin-left:6px;font-size:11px}
+.grade{font-size:84px;font-weight:900;line-height:1;margin:6px 0 2px}
+.grade.gS{color:#FFD66B;text-shadow:0 0 24px rgba(255,214,107,.6)}.grade.gA{color:#8FD3FF}.grade.gB{color:#B9E6A0}.grade.gC{color:#C9CEF2}
+@media (max-width:520px){.diffs{grid-template-columns:1fr;gap:6px}.diff{display:flex;gap:8px;align-items:baseline;padding:6px 10px}.diff b{white-space:nowrap;min-width:48px}.diff small{margin:0}.night .ichar{display:none}.lb{margin:8px 0;padding:8px 10px}}
 /* 房間 */
 body[data-view=room] main#app>div:nth-child(2) .scene{height:clamp(70px,14dvh,190px)}
 .lv{padding:9px 12px;margin-bottom:8px}
@@ -564,7 +582,7 @@ body[data-view=shift] main#app{display:flex;flex-direction:column;overflow:hidde
   <span id="tabs" class="row" style="gap:6px"></span>
 </div></header>
 <main id="app"><div class="card" style="text-align:center"><p class="muted">實驗室開門中…</p></div></main>
-<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v20</footer>
+<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v21</footer>
 <div class="toast" id="toast"></div>
 <div id="instbar" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:70;background:#1E2550;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;line-height:1.5">
   <div style="display:flex;gap:10px;align-items:center"><img src="icon-192.png" alt="" style="width:40px;height:40px;border-radius:10px"><div style="flex:1" id="insttxt"></div>
@@ -890,7 +908,9 @@ function renderHall(app){
     app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;LS.set('dl_mode',mode);render()}); return; }
   if(mode==='shift'){ h=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol">${renderShiftIntro()}</div>${svBar()}</div>`; app.innerHTML=h; bindSv();
     app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;LS.set('dl_mode',mode);render()});
-    $('#startShift').onclick=startShift; return; }
+    $('#startShift').onclick=startShift;
+    app.querySelectorAll('[data-diff]').forEach(b=>b.onclick=()=>{shiftDiff=b.dataset.diff;LS.set('dl_diff_'+(player?.id||''),shiftDiff);app.querySelectorAll('[data-diff]').forEach(x=>x.classList.toggle('on',x===b))});
+    drawLB(); return; }
   if(loadedQ && !questions.length){
     h+=`<div class="card" style="text-align:center"><div style="font-size:44px">🧪</div><h3>實驗室還在佈置中</h3><p class="muted">${isTeacher?'到「題庫」新增題目，房間就會出現關卡。':'老師還沒放題目，晚點再來！'}</p></div>`;
     app.innerHTML=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol"></div>${svBar()}</div>`;bindSv();app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;LS.set('dl_mode',mode);render()});return;
@@ -1117,6 +1137,46 @@ const SHIFT_EVENTS=[
   {zone:'bloodbank',ic:'🚨',title:'血庫冰箱警報',story:'血庫冰箱的溫度警報響了，顯示 9 °C。',prompt:'你應該怎麼處理？',answer:'確認溫度與原因，必要時把血品移到正常的冰箱並記錄',options:['把警報關掉就好','確認溫度與原因，必要時把血品移到正常的冰箱並記錄','把冰箱溫度調到最低','等白班的人來處理'],explain:'紅血球要保存在 1–6 °C，溫度異常會影響血品安全，處理過程都要留下紀錄。'},
   {zone:'analyzer',ic:'⏱️',title:'事情一起來了',story:'同一時間：一筆危急值待通報、一批門診檢體待上機、學弟妹問你晚餐要吃什麼。',prompt:'你最先處理哪一件？',answer:'危急值通報',options:['危急值通報','門診檢體上機','回覆晚餐','先去休息一下'],explain:'危急值攸關病人安全，永遠排第一。'}
 ];
+const PRI={red:{n:'危急',c:'#E5484D',w:3,dl:[40,28]},orange:{n:'急件',c:'#F0A23B',w:2,dl:[52,36]},green:{n:'一般',c:'#3FAE6A',w:1,dl:[66,46]}};
+const DIFF={intern:{name:'實習生',maxSim:2,dlMul:1.3,hints:3,crisis:false,mul:1,d:'同時最多 2 件・時限寬鬆・有 3 次提示'},
+  pgy:{name:'PGY',maxSim:3,dlMul:1,hints:0,crisis:false,mul:1.2,d:'同時最多 3 件・標準時限・沒有提示'},
+  mt:{name:'醫檢師',maxSim:4,dlMul:0.8,hints:0,crisis:true,mul:1.5,d:'同時最多 4 件・時限縮短・03:00 儀器當機、04:00 大量傷患'}};
+const defDiff=()=>player&&player.role==='實習生'?'intern':player&&player.role==='PGY'?'pgy':'mt';
+let shiftDiff=null, lbRes=null, lbSub=false;
+function weekStart(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d.getTime()}
+function drawLB(){const el=$('#lbl');if(!el)return;
+  if(!lbSub&&db){lbSub=true;try{db.collection('results').where('kind','==','shift').onSnapshot(s=>{lbRes=s.docs.map(d=>d.data());drawLB()},e=>{lbRes=[];drawLB()})}catch(e){lbRes=[]}}
+  const all=[...(lbRes||[]),...local.results.filter(r=>r.kind==='shift')];const ws=weekStart(),best={};
+  all.filter(r=>r.ts>=ws).forEach(r=>{const k=r.pid||r.name;if(!best[k]||(r.points||0)>(best[k].points||0))best[k]=r});
+  const L=Object.values(best).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,5);
+  if(lbRes===null&&!L.length){el.textContent='載入中…';return}
+  el.innerHTML=L.length?L.map((r,i)=>`<div class="lbr ${player&&r.pid===player.id?'me':''}"><span class="lbn">${['🥇','🥈','🥉','4','5'][i]}</span><span class="lbm">${esc(r.name||'—')}<small>${r.diff?DIFF[r.diff]?.name||'':''}${r.grade?'・'+r.grade:''}</small></span><b>${r.points||0}</b></div>`).join(''):'這週還沒有人值班，搶第一名吧！'}
+const SE_META={'急診護理師來電':['orange','30 分鐘後急診又來電：「病人看起來沒事，醫師問鉀離子為什麼這麼高？是不是檢體有問題？」'],
+ '危急值出現':['red','病房護理師來電：「剛剛病人血糖很低昏過去了，怎麼沒有人通知我們？」'],
+ '急診檢體送達':['green','急診醫師來電：「PT 結果怪怪的，跟病人狀況對不起來。」'],
+ '標籤怪怪的':['orange','病房來電：「我們的病人怎麼收到別人的報告？」'],
+ '病房要做心電圖':['green','病房又打來：「醫師說心電圖看不清楚，要再做一次。」'],
+ '這張心電圖怪怪的':['green','心臟科醫師來電：「這張心電圖是不是接錯了？病人沒有右位心。」'],
+ '品管跑出來了':['orange','急診來電：「剛剛那批報告的數值跟臨床不太合，可以確認一下嗎？」'],
+ '這張抹片要覆核':['orange','急診醫師來電：「血液科問那張抹片有沒有覆核過？」'],
+ '急診大量出血':['red','急診醫師再度來電：「病人血壓一直掉，血呢？」'],
+ '病人輸血中發燒':['red','病房來電：「病人開始喘、血壓下降，剛剛那袋血還在打…」'],
+ '血庫冰箱警報':['orange','警報又響了，冰箱溫度升到 11 °C，裡面還放著備好的血。'],
+ '事情一起來了':['orange','病房來電：「危急值到底通報了沒？醫師在等。」']};
+const autoPri=t=>/危急|大量出血|休克|輸血.*(發燒|反應)|心跳停止|昏迷/.test(t)?'red':/急診|STAT|急件|品管|標籤|警報|來電|覆核/.test(t)?'orange':'green';
+const GRADE={S:'夜班之神 🏆',A:'可靠的值班夥伴 💪',B:'還在學習中 🌱',C:'需要學長姐陪班 🙋'};
+const GRADE_MSG={S:'整晚穩穩的，危急的事都先處理，細節也都顧到了。下次換你帶學弟妹值班！',A:'大部分狀況都處理得很好，順序再抓準一點就是 S 了。',B:'有幾件事拖太久或順序不對，記得：危急 → 急件 → 一般。再值一晚會更好！',C:'今晚辛苦了！先回學習模式把基本功練熟，再來挑戰。'};
+const CRISIS={
+ down:{zone:'analyzer',ic:'💥',pri:'red',title:'生化儀器當機',crisis:'down',story:'03:00 生化儀器突然顯示錯誤停機，急診檢體還在排隊。\n儀器修好之前，急診生化的其他事件都無法處理！',steps:[
+  {prompt:'第一步你應該怎麼做？',answer:'依儀器 SOP 排除故障，同時通知急診報告會延遲',options:['依儀器 SOP 排除故障，同時通知急診報告會延遲','先把機器關掉，等白班工程師','把檢體全部退件','不用通知，修好再說'],explain:'故障排除要照 SOP，並主動告知臨床可能延遲，必要時啟動備用儀器或外送。'},
+  {prompt:'儀器修好了，接下來呢？',answer:'先跑品管確認合格，再重測停機前後的檢體',options:['直接繼續跑病人檢體','先跑品管確認合格，再重測停機前後的檢體','只重跑最後一管','把停機前的結果直接發出'],explain:'修復後要先確認品管合格，停機前後的結果也要確認是否可靠。'}]},
+ mci:{zone:'bloodbank',ic:'🚑',pri:'red',title:'大量傷患來了',crisis:'mci',story:'04:00 附近發生車禍，急診一次湧入 5 位傷患，血型都還不知道。\n接下來血庫會連續湧入備血單！',steps:[
+  {prompt:'血型未知、等不及交叉試驗，緊急時優先發什麼？',answer:'O 型紅血球（育齡女性優先 Rh 陰性），血漿用 AB 型',options:['O 型紅血球（育齡女性優先 Rh 陰性），血漿用 AB 型','等血型驗完再發','AB 型紅血球','任何血型都可以'],explain:'緊急未交叉輸血以 O 型紅血球為主，AB 型血漿不含抗 A、抗 B。仍需盡快送檢體驗血型。'},
+  {prompt:'好幾張備血單同時進來，怎麼避免拿錯血？',answer:'每一筆都用兩種身分辨識逐一核對，一次處理一位',options:['同時處理所有單子比較快','每一筆都用兩種身分辨識逐一核對，一次處理一位','只核對床號','請護理師自己來拿'],explain:'大量傷患時最容易拿錯血，越忙越要逐一核對。'}]}};
+const MCI_EVENTS=[
+ {zone:'bloodbank',ic:'🩸',pri:'red',title:'傷患 2 號要血',story:'急診：「傷患 2 號已經送檢體了，需要 4 單位紅血球。」',q:{prompt:'檢體到了，發血前一定要做什麼？',answer:'確認檢體與備血單的兩種身分辨識相符',options:['確認檢體與備血單的兩種身分辨識相符','看床號對就好','直接發 O 型','先發再補單'],explain:'即使再急，身分辨識都不能省。'}},
+ {zone:'bloodbank',ic:'🩸',pri:'orange',title:'大量輸血提醒',story:'傷患 1 號已經輸了 6 單位紅血球，醫師問還要注意什麼。',q:{prompt:'大量輸血時，你會提醒臨床注意？',answer:'依比例補充血漿與血小板，並監測鈣離子與體溫',options:['依比例補充血漿與血小板，並監測鈣離子與體溫','只要繼續給紅血球就好','暫停輸血觀察','改用生理食鹽水即可'],explain:'大量輸血會稀釋凝血因子與血小板，也可能造成低血鈣與低體溫。'}},
+ {zone:'bloodbank',ic:'📞',pri:'orange',title:'急診催血',story:'急診：「傷患 3 號的血好了沒？」你手上還有兩袋在核對。',q:{prompt:'你應該怎麼回覆？',answer:'告知目前進度與預計時間，核對完成後立即通知',options:['告知目前進度與預計時間，核對完成後立即通知','先把血發出去，核對之後再做','不回應，專心核對','請他們自己來血庫找'],explain:'清楚溝通進度，但不能為了快而跳過核對。'}}];
 const CHIEF=[
   [1800,'夜班之神 🏆','整晚穩穩的，細節都顧到了。下次換你帶學弟妹值班！'],
   [1100,'可靠的值班夥伴 💪','大部分狀況都處理得很好，錯的那幾題回去看一下解說就更穩了。'],
@@ -1135,16 +1195,18 @@ function renderShiftIntro(){
   const best=bestShift();
   return `<div class="night"><span class="moon">🌙</span><h2>醫檢大夜班</h2>
    <p>00:00 到 08:00 大夜班，整個檢驗科只有你。<br>電話、急診檢體、危急值會一件一件找上門，點事件，角色就會走過去處理。</p>
-   <ul style="padding-left:18px;margin:8px 0"><li>前 5 件事一件一件來，之後進入<b style="color:#FF8A80">🔥 尖峰時段</b>：2–3 個科室同時出狀況，時限更短</li><li>每件事都有處理時限，越快處理分數越高，逾時扣分</li><li>走路會花時間；精力太低走得更慢，記得去休息室喝咖啡</li><li>天亮結算今晚分數，還有組長留言</li></ul>
-   ${best!=null?`<p>你的最佳紀錄：<b style="color:#FFD66B">${best} 分</b></p>`:''}
+   <ul class="nrules"><li>事件分 <i class="pb" style="background:#E5484D">危急</i> <i class="pb" style="background:#F0A23B">急件</i> <i class="pb" style="background:#3FAE6A">一般</i>，<b style="color:#FFD66B">要先處理危急的</b>，順序錯會扣分</li><li>前 5 件事一件一件來，之後進入<b style="color:#FF8A80">🔥 尖峰時段</b>，好幾個科室同時出狀況</li><li>處理錯或逾時，單位會再打電話來，變成<b style="color:#FF8A80">連鎖事件</b></li><li>走路花時間；精力太低走得更慢，記得去休息室喝咖啡</li><li>天亮評等 S／A／B／C，<b style="color:#FFD66B">拿 S 才算真正過關</b></li></ul>
+   <div class="diffs">${Object.entries(DIFF).map(([k,v])=>`<button class="diff ${(shiftDiff||LS.get('dl_diff_'+(player?.id||''),null)||defDiff())===k?'on':''}" data-diff="${k}"><b>${v.name}</b><small>${v.d}</small></button>`).join('')}</div>
+   ${best!=null?`<p style="margin:8px 0 0">你的最佳紀錄：<b style="color:#FFD66B">${best} 分</b></p>`:''}
+   <div class="lb" id="lb"><b>🏆 本週大夜班排行榜</b><div id="lbl" class="muted" style="color:#C9CEF2">載入中…</div></div>
    <div class="ichar"><span class="pf big">${charPortrait(curChar(),'normal')}</span><span><small style="color:#C9CEF2">今晚值班的是</small><b style="display:block;font-size:20px;color:#fff">${esc(curChar().name)}</b><small style="color:#FFD66B">${curChar().sex==='f'?'女':'男'}醫檢師</small></span></div>
    <button class="btn acc full" id="startShift">🌙 開始值班</button></div>`;
 }
 const BANK_TITLES={blood:['CBC 有狀況','抹片要確認','血液組需要你'],collect:['病房請你協助','採檢有狀況','檢體有疑問'],physio:['檢查需要你確認','生理檢查來電','有一筆檢查要看'],micro:['門診檢驗來電','OPD 有狀況','門診檢體要確認'],bloodbank:['血庫有檢體等你','備血有疑問','血庫來電'],chem:['急診生化來電','生化結果有疑問','急件生化檢體'],immuno:['急診免疫急件','快篩結果有疑問','免疫檢驗要確認']};
 function buildPool(){
-  const scripted=scenarioList().map(e=>({...e,ic:e.ic||ZIC[e.zone]||'📞',q:{prompt:e.prompt,answer:e.answer,options:e.options,explain:e.explain}}));
+  const scripted=scenarioList().map(e=>({...e,ic:e.ic||ZIC[e.zone]||'📞',pri:e.pri||SE_META[e.title]?.[0]||autoPri(e.title+e.story),follow:SE_META[e.title]?.[1],q:{prompt:e.prompt,answer:e.answer,options:e.options,explain:e.explain}}));
   const zmap=r=>(r==='chem'||r==='immuno'||r==='blood')?'analyzer':r;
-  const bank=questions.filter(q=>q.type==='choice'&&ZONES[zmap(q.room)]).map(q=>({zone:zmap(q.room),ic:ROOMS[q.room].ic,title:shuffle(BANK_TITLES[q.room]||['有事要處理'])[0],story:'',q:{id:q.id,prompt:q.prompt,answer:q.answer,options:q.options,explain:q.explain,img:q.img}}));
+  const bank=questions.filter(q=>q.type==='choice'&&ZONES[zmap(q.room)]).map(q=>({zone:zmap(q.room),ic:ROOMS[q.room].ic,title:shuffle(BANK_TITLES[q.room]||['有事要處理'])[0],story:'',pri:Math.random()<({chem:.4,immuno:.35,blood:.35,bloodbank:.3}[q.room]||.15)?'orange':'green',q:{id:q.id,prompt:q.prompt,answer:q.answer,options:q.options,explain:q.explain,img:q.img}}));
   return shuffle([...scripted,...bank]);
 }
 function nextEvent(exclude=[]){
@@ -1156,14 +1218,22 @@ function spawn(n){
   const zones=[];
   for(let k=0;k<n;k++){
     const base=nextEvent(zones); zones.push(base.zone);
-    const dl=shift.peak?32+Math.floor(Math.random()*14)+k*6:50+Math.floor(Math.random()*16);
-    shift.events.push({...base,id:uid(),born:shift.t,deadline:shift.t+dl,status:'open'});
+    pushEvent(base,k);
   }
   toast(n>1?`🔥 ${n} 個科室同時出狀況！`:`${shift.events[shift.events.length-1].ic} 新事件：${shift.events[shift.events.length-1].title}`);
 }
+function pushEvent(base,k=0,mul=1){const P=PRI[base.pri||'green'],D=DIFF[shift.diff];
+  const dl=Math.round(((shift.peak?P.dl[1]:P.dl[0])+Math.floor(Math.random()*10)+k*5)*D.dlMul*mul);
+  const ev={...base,pri:base.pri||'green',id:uid(),born:shift.t,deadline:shift.t+dl,status:'open'};shift.events.push(ev);return ev}
+function spawnFollow(e,why){if(e.isFollow||e.crisis||shift.chains+shift.followQ.length>=6)return;const up={green:'orange',orange:'red',red:'red'}[e.pri];
+  shift.followQ.push({at:shift.t+18+Math.floor(Math.random()*12),ev:{zone:e.zone,ic:'📞',pri:up,title:'後續：'+e.title.replace(/^後續：/,''),isFollow:true,
+   story:(e.follow||'剛剛那件事沒處理好，單位又打電話來追問了。')+'\n（'+why+'）',q:e.q,follow:null}})}
 function resolvedCount(){return shift.events.filter(e=>e.status==='done'||e.status==='missed').length}
 function startShift(){
-  shift={t:0,energy:100,points:0,at:'analyzer',events:[],pool:buildPool(),nextAt:4,peak:false,busy:false,correct:0,wrong:0,missed:0,start:Date.now(),items:[],over:false,warned:false};
+  const diff=shiftDiff||LS.get('dl_diff_'+(player?.id||''),null)||defDiff();shiftDiff=diff;
+  shift={t:0,energy:100,points:0,at:'analyzer',events:[],pool:[],nextAt:4,peak:false,busy:false,correct:0,wrong:0,missed:0,start:Date.now(),items:[],over:false,warned:false,
+    diff,hintsLeft:DIFF[diff].hints,orderOk:0,orderTotal:0,redMissed:0,chains:0,followQ:[],crisisDone:{},crisisOn:null};
+  shift.pool=buildPool();
   view='shift'; render(); window.scrollTo(0,0);
   clearInterval(shiftTimer); shiftTimer=setInterval(shiftTick,1000);
 }
@@ -1173,17 +1243,26 @@ function shiftTick(){
   shift.t+=2; shift.energy=Math.max(0,shift.energy-0.45);
   if(shift.energy<20&&!shift.warned){shift.warned=true;toast('😪 好睏…精力太低走路會變慢，去休息室喝杯咖啡吧')}
   checkDeadlines();
+  const due=shift.followQ.filter(f=>shift.t>=f.at);if(due.length){shift.followQ=shift.followQ.filter(f=>shift.t<f.at);due.forEach(f=>{const ev=pushEvent(f.ev,0,.8);shift.chains++;toast(`📞 連鎖事件：${ev.title}`)})}
+  if(DIFF[shift.diff].crisis){
+    if(!shift.crisisDone.down&&shift.t>=180){shift.crisisDone.down=1;const ev=pushEvent({...CRISIS.down,q:CRISIS.down.steps[0]},0,1.3);shift.crisisOn=ev.id;toast('💥 生化儀器當機！急診生化暫停，先排除故障');alarm()}
+    if(!shift.crisisDone.mci&&shift.t>=240){shift.crisisDone.mci=1;pushEvent({...CRISIS.mci,q:CRISIS.mci.steps[0]},0,1.3);toast('🚑 大量傷患！血庫會連續湧入備血單');alarm();
+      shift.mciQ=MCI_EVENTS.map((e,i)=>({at:shift.t+6+i*8,e}))}
+    if(shift.mciQ){const d2=shift.mciQ.filter(x=>shift.t>=x.at);shift.mciQ=shift.mciQ.filter(x=>shift.t<x.at);d2.forEach(x=>{pushEvent(x.e);toast(`${x.e.ic} ${x.e.title}`)});if(!shift.mciQ.length)shift.mciQ=null}
+  }
   if(!shift.peak&&resolvedCount()>=5){shift.peak=true;shift.nextAt=shift.t+4;toast('🔥 尖峰時段開始！接下來會好幾個科室同時找你');const h=document.querySelector('.shud');if(h){h.classList.add('alarm');setTimeout(()=>h.classList.remove('alarm'),2400)}}
   const open=shift.events.filter(e=>e.status==='open').length;
   if(open===0&&shift.t>=shift.nextAt&&shift.t<SHIFT_LEN-30){
+    const mx=DIFF[shift.diff].maxSim;
     if(!shift.peak) spawn(1);
-    else{ spawn(Math.random()<(resolvedCount()>12?0.7:0.4)?3:2); }
+    else{ const r=Math.random(), late=resolvedCount()>12; spawn(Math.min(mx, mx>=4?(r<(late?.5:.25)?4:r<.7?3:2):mx===3?(r<(late?.7:.4)?3:2):2)); }
     shift.nextAt=Infinity; updateShift(); return;
   }
   if(open===0&&shift.nextAt===Infinity&&shift.events.length){shift.nextAt=shift.t+(shift.peak?6:8)+Math.floor(Math.random()*8)}
   if(shift.t>=SHIFT_LEN) return endShift();
   updateShift();
 }
+function alarm(){const h=document.querySelector('.shud');if(h){h.classList.add('alarm');setTimeout(()=>h.classList.remove('alarm'),2400)}}
 function zoneHtml(k){const ic=ZONES[k].ic||ROOMS[k]?.ic;return `<button class="zone" data-z="${k}">${k==='micro'?SCENES.opd:SCENES[k]}<span class="zl">${ic} ${ZONES[k].name}</span></button>`}
 function curExpr(){
   if(shift.flash&&Date.now()<shift.flash.until) return shift.flash.e;
@@ -1196,7 +1275,7 @@ function renderShift(app){
    <div class="shgrid"><div class="floor" id="floor">${['collect','physio','rest','micro','bloodbank','analyzer'].map(zoneHtml).join('')}<div class="avatar" id="avatar"></div></div>
    <div class="evlist" id="evlist"></div></div>`;
   const q=$('#sq');q.onclick=()=>{if(q.dataset.s){stopShift();shift=null;go('hall')}else{q.dataset.s=1;q.textContent='結束？';setTimeout(()=>{if(q.isConnected){q.textContent='✕';delete q.dataset.s}},2500)}};
-  app.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{const z=b.dataset.z;if(z==='rest')return coffee();const e=shift.events.filter(x=>x.status==='open'&&x.zone===z).sort((a,b)=>a.deadline-b.deadline)[0];if(e)handleEvent(e.id);else toast(`${ZONES[z].name}目前沒有事情要處理`)});
+  app.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{const z=b.dataset.z;if(z==='rest')return coffee();const e=shift.events.filter(x=>x.status==='open'&&x.zone===z&&!locked(x)).sort((a,b)=>PRI[b.pri].w-PRI[a.pri].w||a.deadline-b.deadline)[0];if(e)handleEvent(e.id);else toast(`${ZONES[z].name}目前沒有事情要處理`)});
   shift.expr=null; placeAvatar(false); updateShift();
 }
 addEventListener('resize',()=>{if(view==='shift'&&shift)placeAvatar(false)});
@@ -1216,12 +1295,13 @@ function updateShift(){
   $('#senl').textContent=`精力 ${Math.round(shift.energy)}%`;
   $('#spts').textContent=`⭐ ${shift.points}`;
   const sw=$('#swho');if(sw)sw.innerHTML=shift.peak?'<b style="color:#FF8A80">🔥 尖峰時段</b>':`${esc(curChar().name)}・大夜班`;
-  const open=shift.events.filter(e=>e.status==='open').sort((a,b)=>a.deadline-b.deadline);
+  const open=shift.events.filter(e=>e.status==='open').sort((a,b)=>PRI[b.pri].w-PRI[a.pri].w||a.deadline-b.deadline);
   document.querySelectorAll('.zone .alert').forEach(x=>x.remove());
-  open.forEach(e=>{const z=document.querySelector(`[data-z="${e.zone}"]`);if(z&&!z.querySelector('.alert')){const s=document.createElement('span');s.className='alert';s.textContent='!';z.appendChild(s)}});
-  $('#evlist').innerHTML=open.length?open.map(e=>{const left=e.deadline-shift.t;return `<button class="ev ${left<=15?'hot':''}" data-ev="${e.id}"><span class="ei">${e.ic}</span><span class="et"><b>${esc(e.title)}</b><small>📍 ${ZONES[e.zone].name}</small></span><span class="dl">剩 ${Math.max(0,Math.ceil(left))} 分</span></button>`}).join(''):`<div class="quiet">🌙 目前很安靜…下一件事隨時會來${shift.peak?'（尖峰時段，可能一次來好幾件！）':''}</div>`;
+  open.forEach(e=>{const z=document.querySelector(`[data-z="${e.zone}"]`);if(z&&!z.querySelector('.alert')){const s=document.createElement('span');s.className='alert';s.style.background=PRI[e.pri].c;s.textContent='!';z.appendChild(s)}});
+  $('#evlist').innerHTML=open.length?open.map(e=>{const left=e.deadline-shift.t;return `<button class="ev ${left<=15?'hot':''} p-${e.pri} ${locked(e)?'locked':''}" data-ev="${e.id}"><span class="ei">${e.ic}</span><span class="et"><b><i class="pb" style="background:${PRI[e.pri].c}">${PRI[e.pri].n}</i>${esc(e.title)}</b><small>📍 ${ZONES[e.zone].name}${locked(e)?'・🔒 儀器故障中':''}</small></span><span class="dl">剩 ${Math.max(0,Math.ceil(left))} 分</span></button>`}).join(''):`<div class="quiet">🌙 目前很安靜…下一件事隨時會來${shift.peak?'（尖峰時段，可能一次來好幾件！）':''}</div>`;
   document.querySelectorAll('[data-ev]').forEach(b=>b.onclick=()=>handleEvent(b.dataset.ev));
 }
+function locked(e){return shift.crisisOn&&e.zone==='analyzer'&&e.id!==shift.crisisOn&&shift.events.find(x=>x.id===shift.crisisOn&&x.status==='open')}
 function walkTo(zone,cb){
   if(shift.at===zone){cb();return}
   const cost=shift.energy<20?16:8; shift.busy=true; shift.at=zone; shift.t+=cost;
@@ -1232,36 +1312,50 @@ function coffee(){
   if(shift.busy) return;
   walkTo('rest',()=>{shift.t+=20;shift.energy=Math.min(100,shift.energy+50);shift.warned=false;shift.busy=false;shift.flash={e:'happy',until:Date.now()+2600};toast('☕ 喝了咖啡，精力 +50（花了 20 分鐘）');checkDeadlines();updateShift()});
 }
-function checkDeadlines(){shift.events.forEach(e=>{if(e.status==='open'&&shift.t>e.deadline){e.status='missed';shift.missed++;shift.points-=60;toast(`⏰ 逾時：${e.title}（-60）`)}})}
+function checkDeadlines(){shift.events.forEach(e=>{if(e.status==='open'&&shift.t>e.deadline){e.status='missed';shift.missed++;const pen=e.pri==='red'?120:e.pri==='orange'?70:50;shift.points-=pen;
+  if(e.pri==='red'){shift.redMissed++;toast(`🔴 危急事件逾時：${e.title}（-${pen}）`)}else toast(`⏰ 逾時：${e.title}（-${pen}）`);
+  if(e.crisis==='down'){shift.crisisOn=null}
+  if(e.pri!=='green')spawnFollow(e,'上一次逾時沒處理')}})}
 function handleEvent(id){
   if(shift.busy) return; const e=shift.events.find(x=>x.id===id); if(!e||e.status!=='open') return;
+  if(locked(e)) return toast('🔒 生化儀器故障中，先處理「生化儀器當機」');
+  const others=shift.events.filter(x=>x.status==='open'&&x.id!==e.id&&!locked(x));
+  if(others.length){const top=Math.max(...others.map(x=>PRI[x.pri].w));shift.orderTotal++;
+    if(PRI[e.pri].w>=top)shift.orderOk++;else{shift.points-=30;const t2=others.find(x=>PRI[x.pri].w===top);toast(`⚠️ 順序不對：還有「${PRI[t2.pri].n}」的「${t2.title}」在等（-30）`)}}
   walkTo(e.zone,()=>{shift.busy=true;checkDeadlines();if(e.status!=='open'){shift.busy=false;updateShift();return}openEvent(e)});
 }
 function openEvent(e){
-  let opts=shuffle([...new Set([e.q.answer,...(e.q.options||[])])]);
+  if(e.steps&&e.step==null)e.step=0; if(e.steps)e.q=e.steps[e.step];
+  let opts=shuffle([...new Set([e.q.answer,...(e.q.options||[])])]); let hidden=[];
   if(opts.length<4&&e.zone==='micro')for(const s of shuffle(MBANK)){if(opts.length>=4)break;if(!opts.includes(s))opts.push(s)}
   opts=shuffle(opts);
   const m=document.createElement('div');m.className='modal';
   const draw=(chosen)=>{const done=chosen!=null,ok=chosen===e.q.answer;
-    m.innerHTML=`<div class="sheet"><div class="row" style="margin-bottom:8px"><span style="font-size:26px">${e.ic}</span><h3 style="margin:0;flex:1">${esc(e.title)}</h3><span class="tag">${ZONES[e.zone].name}</span></div>
+    m.innerHTML=`<div class="sheet"><div class="row" style="margin-bottom:8px"><span style="font-size:26px">${e.ic}</span><h3 style="margin:0;flex:1">${esc(e.title)}</h3><i class="pb" style="background:${PRI[e.pri].c}">${PRI[e.pri].n}</i><span class="tag">${ZONES[e.zone].name}</span></div>${e.steps?`<div class="muted" style="font-size:13px;margin-bottom:4px">步驟 ${e.step+1} / ${e.steps.length}</div>`:''}
      ${e.story?`<div class="story">${nl(e.story)}</div>`:''}${e.q.img?`<div class="imgbox" style="margin:8px 0"><img src="${e.q.img}" alt=""></div>`:''}
      <div class="prompt" style="margin-top:8px">${nl(e.q.prompt||'這是什麼？')}</div>
-     <div class="opts">${opts.map((o,k)=>`<button class="opt ${done?(o===e.q.answer?'ok':o===chosen?'bad':''):''}" data-k="${k}" ${done?'disabled':''}>${esc(o)}</button>`).join('')}</div>
+     <div class="opts">${opts.map((o,k)=>hidden.includes(o)?'':`<button class="opt ${done?(o===e.q.answer?'ok':o===chosen?'bad':''):''}" data-k="${k}" ${done?'disabled':''}>${esc(o)}</button>`).join('')}</div>
+     ${!done&&shift.hintsLeft>0&&!hidden.length&&opts.length>2?`<button class="btn ghost sm" id="shint" style="margin-top:8px">💡 提示：刪去一個錯誤選項（剩 ${shift.hintsLeft} 次）</button>`:''}
      ${done?`<div class="fb ${ok?'ok':'bad'} pop"><b>${ok?'✅ 處理得好！':'❌ 這樣處理不太對'}</b>${ok?'':`<div>正確做法：${esc(e.q.answer)}</div>`}${e.q.explain?`<div style="margin-top:6px">${nl(e.q.explain)}</div>`:''}</div>
-       <div style="height:12px"></div><button class="btn full" id="back">繼續值班 →</button>`:''}</div>`;
-    m.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const c=opts[+b.dataset.k];const ok2=c===e.q.answer;e.status='done';
-      const left=Math.max(0,e.deadline-shift.t);if(ok2){shift.correct++;shift.points+=100+Math.round(left)}else{shift.wrong++;shift.points+=10}shift.flash={e:ok2?'happy':'soul',until:Date.now()+2600};
+       <div style="height:12px"></div><button class="btn full" id="back">${e.steps&&e.step<e.steps.length-1?'下一步 →':'繼續值班 →'}</button>`:''}</div>`;
+    const hb=m.querySelector('#shint');if(hb)hb.onclick=()=>{const w=opts.filter(o=>o!==e.q.answer);hidden=[w[Math.floor(Math.random()*w.length)]];shift.hintsLeft--;draw(null)};
+    m.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const c=opts[+b.dataset.k];const ok2=c===e.q.answer;const last=!e.steps||e.step>=e.steps.length-1;if(last)e.status='done';
+      const left=Math.max(0,e.deadline-shift.t),pw=PRI[e.pri].w;if(ok2){shift.correct++;shift.points+=Math.round((80+20*pw+left)*(e.crisis?1.5:1))}else{shift.wrong++;shift.points+=5;spawnFollow(e,'上一次處理的方式不對')}
+      if(last&&e.crisis==='down')shift.crisisOn=null;shift.flash={e:ok2?'happy':'soul',until:Date.now()+2600};
       shift.items.push({q:e.q.id||('shift:'+e.title),ok:ok2});shift.t+=6;updateShift();draw(c);setTimeout(()=>{const fb=m.querySelector('.fb');if(fb)fb.scrollIntoView({behavior:'smooth',block:'start'})},60)});
-    const bk=m.querySelector('#back');if(bk)bk.onclick=()=>{m.remove();shift.busy=false;if(shift.t>=SHIFT_LEN)return endShift();checkDeadlines();updateShift()};
+    const bk=m.querySelector('#back');if(bk)bk.onclick=()=>{if(e.steps&&e.step<e.steps.length-1){e.step++;e.q=e.steps[e.step];opts=shuffle([...new Set([e.q.answer,...(e.q.options||[])])]);hidden=[];draw(null);m.querySelector('.sheet').scrollTop=0;return}m.remove();shift.busy=false;if(shift.t>=SHIFT_LEN)return endShift();checkDeadlines();updateShift()};
   };
   draw(null);document.body.appendChild(m);m.querySelector('.sheet').scrollTop=0;
 }
 async function endShift(){
   if(!shift||shift.over) return; shift.over=true; stopShift();
-  shift.events.forEach(e=>{if(e.status==='open'){e.status='missed';shift.missed++;shift.points-=60}});
-  shift.points=Math.max(0,shift.points);
+  shift.events.forEach(e=>{if(e.status==='open'){e.status='missed';shift.missed++;shift.points-=60;if(e.pri==='red')shift.redMissed++}});
+  shift.points=Math.max(0,Math.round(shift.points*DIFF[shift.diff].mul));
+  {const tot=shift.correct+shift.wrong+shift.missed,acc=tot?shift.correct/tot:0,ord=shift.orderTotal?shift.orderOk/shift.orderTotal:1;
+   shift.acc=Math.round(acc*100);shift.ord=Math.round(ord*100);
+   shift.grade=acc>=.85&&ord>=.85&&shift.redMissed===0?'S':acc>=.7&&ord>=.7&&shift.redMissed<=1?'A':acc>=.5?'B':'C';}
   const handled=shift.correct+shift.wrong;
-  const rec={rid:uid(),pid:player.id,name:player.name,role:player.role,kind:'shift',label:'值班挑戰',levelId:'shift',room:'',score:shift.correct,total:handled+shift.missed,pct:handled+shift.missed?Math.round(shift.correct/(handled+shift.missed)*100):0,points:shift.points,stamp:'',hints:0,missed:shift.missed,dur:Math.round((Date.now()-shift.start)/1000),ts:Date.now(),items:shift.items.filter(x=>!String(x.q).startsWith('shift:'))};
+  const rec={rid:uid(),pid:player.id,name:player.name,role:player.role,kind:'shift',label:'值班挑戰',levelId:'shift',room:'',score:shift.correct,total:handled+shift.missed,pct:handled+shift.missed?Math.round(shift.correct/(handled+shift.missed)*100):0,points:shift.points,stamp:'',hints:DIFF[shift.diff].hints-shift.hintsLeft,missed:shift.missed,diff:shift.diff,grade:shift.grade,orderPct:shift.ord,chains:shift.chains,redMissed:shift.redMissed,dur:Math.round((Date.now()-shift.start)/1000),ts:Date.now(),items:shift.items.filter(x=>!String(x.q).startsWith('shift:'))};
   local.results.push(rec);LS.set('dl_local',local);
   const s=shift; s.firstSv=!LS.get('dl_svp_'+player.id,false); if(s.firstSv) LS.set('dl_svp_'+player.id,true);
   view='shiftEnd'; renderShiftEnd($('#app'),s,'saving'); window.scrollTo(0,0);
@@ -1270,10 +1364,11 @@ async function endShift(){
   if(view==='shiftEnd') renderShiftEnd($('#app'),s,saved);
 }
 function renderShiftEnd(app,s,saved){
-  const [,rank,msg]=CHIEF.find(c=>s.points>=c[0]);
-  app.innerHTML=`<div class="night" style="text-align:center"><div style="font-size:40px">🌅</div><div style="color:#C9CEF2">08:00 交班</div>
-   <div class="rank">${rank}</div><div style="font-size:44px;font-weight:900;color:#fff">${s.points}<span style="font-size:18px;color:#C9CEF2"> 分</span></div>
-   <div class="stats" style="display:flex;gap:8px;margin-top:12px">${[['✅',s.correct,'處理正確'],['❌',s.wrong,'處理錯誤'],['⏰',s.missed,'逾時']].map(([i,n,t])=>`<div style="flex:1;background:rgba(255,255,255,.1);border-radius:12px;padding:8px"><b style="font-size:20px;color:#fff">${i} ${n}</b><div style="font-size:12px;color:#C9CEF2">${t}</div></div>`).join('')}</div>
+  const rank=GRADE[s.grade],msg=GRADE_MSG[s.grade];
+  app.innerHTML=`<div class="night" style="text-align:center"><div style="color:#C9CEF2">🌅 08:00 交班・${DIFF[s.diff].name}難度</div>
+   <div class="grade g${s.grade}">${s.grade}</div><div class="rank">${rank}</div><div style="font-size:36px;font-weight:900;color:#fff">${s.points}<span style="font-size:16px;color:#C9CEF2"> 分</span></div>
+   ${s.grade==='S'?'<div style="color:#FFD66B;font-weight:900">🎉 拿到 S，這一晚真正過關！</div>':'<div style="color:#C9CEF2;font-size:13px">拿到 S 才算真正過關：正確率、順序正確率都 85% 以上，且沒有危急事件逾時</div>'}
+   <div class="stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px">${[['✅',s.correct,'處理正確'],['❌',s.wrong,'處理錯誤'],['⏰',s.missed,'逾時'],['🎯',s.ord+'%','順序正確率'],['🔴',s.redMissed,'危急逾時'],['📞',s.chains,'連鎖事件']].map(([i,n,t])=>`<div style="flex:1;background:rgba(255,255,255,.1);border-radius:12px;padding:8px"><b style="font-size:20px;color:#fff">${i} ${n}</b><div style="font-size:12px;color:#C9CEF2">${t}</div></div>`).join('')}</div>
    <div class="chief"><b>📝 組長留言</b><br>${msg}</div></div>
    ${saved==='fail'?`<div class="note">📮 這次紀錄沒辦法自動傳給老師。<button class="btn sm acc" data-go="sync">產生進度碼</button></div>`:saved==='ok'?`<div class="note" style="background:var(--ok-soft)">✅ 紀錄已同步給老師</div>`:''}
    ${s.firstSv?`<div class="note" style="text-align:center;background:#FFF1C9"><b>🎉 第一次值班完成！</b><br>請幫我們填一下滿意度調查，<span id="svcd">6</span> 秒後自動前往<div style="height:8px"></div><button class="btn acc sm" data-go="survey">現在就去填 →</button></div>`:''}
@@ -1514,13 +1609,14 @@ function bankSwitch(){return `<div class="modesw bsw" style="grid-template-colum
 function bindBankSwitch(app){app.querySelectorAll('[data-bm]').forEach(b=>b.onclick=()=>{bankMode=b.dataset.bm;editing=null;draft=null;seEditing=null;seDraft=null;bankFormOpen=false;renderBank(app)})}
 function renderShiftBank(app){
   const e0=seEditing?shiftEvs.find(x=>x.id===seEditing):null;
-  if(!seDraft) seDraft=e0?{zone:e0.zone,ic:e0.ic||'',title:e0.title,story:e0.story||'',prompt:e0.prompt||'',answer:e0.answer,dis:(e0.options||[]).filter(o=>o!==e0.answer).join('\n'),explain:e0.explain||''}:{zone:'analyzer',ic:'',title:'',story:'',prompt:'',answer:'',dis:'',explain:''};
+  if(!seDraft) seDraft=e0?{zone:e0.zone,ic:e0.ic||'',title:e0.title,story:e0.story||'',prompt:e0.prompt||'',answer:e0.answer,dis:(e0.options||[]).filter(o=>o!==e0.answer).join('\n'),explain:e0.explain||'',pri:e0.pri||'auto'}:{pri:'auto',zone:'analyzer',ic:'',title:'',story:'',prompt:'',answer:'',dis:'',explain:''};
   const d=seDraft;
   let h='';
   h+=`<div class="card" id="seform"><h3>${seEditing?'✏️ 編輯值班情境':'➕ 新增值班情境'}</h3>
    <label class="f">事件發生地點</label><div class="chips">${SZONES.map(z=>`<button class="chip ${d.zone===z?'on':''}" data-sz="${z}">${ZIC[z]} ${zoneName(z)}</button>`).join('')}</div>
    <div class="row" style="align-items:flex-end"><div style="flex:3;min-width:180px"><label class="f">事件標題（顯示在待辦清單）</label><input type="text" id="se_title" maxlength="20" placeholder="例如：急診護理師來電" value="${esc(d.title)}"></div>
    <div style="flex:1;min-width:80px"><label class="f">圖示</label><input type="text" id="se_ic" maxlength="4" placeholder="${ZIC[d.zone]}" value="${esc(d.ic)}"></div></div>
+   <label class="f">緊急程度</label><div class="chips">${Object.entries(PRI).map(([k,v])=>`<button class="chip ${(d.pri||'auto')===k?'on':''}" data-spri="${k}"><i class="pb" style="background:${v.c}">${v.n}</i></button>`).join('')}<button class="chip ${(d.pri||'auto')==='auto'?'on':''}" data-spri="auto">自動判斷</button></div>
    <label class="f">情境描述</label><textarea id="se_story" placeholder="例如：「剛剛那位病人鉀離子 6.8，可是他看起來還好，要不要重抽？」">${esc(d.story)}</textarea>
    <label class="f">問題</label><input type="text" id="se_prompt" placeholder="例如：你第一步應該怎麼做？" value="${esc(d.prompt)}">
    <label class="f">正確做法</label><input type="text" id="se_ans" value="${esc(d.answer)}">
@@ -1538,10 +1634,11 @@ function renderShiftBank(app){
   $('#bk_back').onclick=()=>{seEditing=null;seDraft=null;bankFormOpen=false;renderShiftBank(app)};
   const sync=()=>{const g=id=>$(id);d.title=g('#se_title').value;d.ic=g('#se_ic').value;d.story=g('#se_story').value;d.prompt=g('#se_prompt').value;d.answer=g('#se_ans').value;d.dis=g('#se_dis').value;d.explain=g('#se_exp').value};
   app.querySelectorAll('[data-sz]').forEach(b=>b.onclick=()=>{sync();d.zone=b.dataset.sz;renderShiftBank(app)});
+  app.querySelectorAll('[data-spri]').forEach(b=>b.onclick=()=>{sync();d.pri=b.dataset.spri;renderShiftBank(app)});
   if($('#se_cancel')) $('#se_cancel').onclick=()=>{seEditing=null;seDraft=null;bankFormOpen=false;renderShiftBank(app)};
   $('#se_save').onclick=async()=>{sync();const a=d.answer.trim();if(!d.title.trim())return toast('請填事件標題');if(!a)return toast('請填正確做法');
     const dis=d.dis.split('\n').map(x=>x.trim()).filter(x=>x&&x!==a);if(!dis.length)return toast('請至少填一個錯誤做法');
-    const data={zone:d.zone,ic:d.ic.trim(),title:d.title.trim(),story:d.story.trim(),prompt:d.prompt.trim()||'你應該怎麼處理？',answer:a,options:[a,...dis].slice(0,6),explain:d.explain.trim(),enabled:e0?e0.enabled!==false:true,created:e0?.created||Date.now()};
+    const data={zone:d.zone,ic:d.ic.trim(),title:d.title.trim(),story:d.story.trim(),prompt:d.prompt.trim()||'你應該怎麼處理？',answer:a,options:[a,...dis].slice(0,6),explain:d.explain.trim(),pri:d.pri&&d.pri!=='auto'?d.pri:'',enabled:e0?e0.enabled!==false:true,created:e0?.created||Date.now()};
     const b=$('#se_save');b.disabled=true;b.textContent='儲存中…';
     try{await db.doc('shiftEvents/'+(seEditing||('se'+uid()))).set(data);toast(seEditing?'已更新':'已新增 ✅');if(seEditing)bankFormOpen=false;seEditing=null;seDraft={zone:d.zone,ic:'',title:'',story:'',prompt:'',answer:'',dis:'',explain:''};renderShiftBank(app)}catch(e){b.disabled=false;b.textContent='再試一次';toast('儲存失敗')}};
   app.querySelectorAll('[data-seed]').forEach(b=>b.onclick=()=>{seEditing=b.dataset.seed;seDraft=null;bankFormOpen=true;bankJump=true;renderShiftBank(app)});
