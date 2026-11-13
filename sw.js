@@ -1,5 +1,5 @@
 // 細節實驗室 PWA：讓遊戲可以安裝到手機、離線也能打開
-const CACHE = 'detail-lab-v13';
+const CACHE = 'detail-lab-v15';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
