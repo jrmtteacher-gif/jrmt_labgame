@@ -417,6 +417,44 @@ body[data-view=room] main#app{max-width:1180px;overflow:hidden}
  .rright .lv .num{width:46px;height:46px}
  .rright .path{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;align-content:start}
 }
+
+/* 題庫：一頁式（電腦左右兩欄，手機切換） */
+body[data-view=bank] main#app{max-width:1180px;overflow:hidden}
+.bankwrap{display:flex;flex-direction:column;gap:10px;height:100%;min-height:0}
+.bankwrap>.bsw{flex:none;margin:0!important}
+.bankcols{flex:1;min-height:0;display:flex}
+.bcol{flex:1;min-width:0;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 2px 8px}
+.bcol>.card,.bcol>details.card{margin-bottom:10px}
+.bankwrap:not(.formopen) .bform{display:none}
+.bankwrap.formopen .blist{display:none}
+@media (min-width:900px){
+ .bankcols{display:grid;grid-template-columns:1fr minmax(420px,540px);gap:16px}
+ .bankwrap .bform,.bankwrap .blist{display:block!important}
+ .bankwrap .mobonly{display:none!important}
+ .bform>.card{margin:0}
+}
+
+/* 問卷、問卷設定：電腦版一頁式 */
+.lq{margin-bottom:10px}
+@media (min-width:900px){
+ body[data-view=survey] main#app,body[data-view=svedit] main#app{max-width:1180px;overflow:hidden}
+ .svwrap{display:grid;grid-template-columns:minmax(320px,420px) 1fr;grid-template-rows:auto 1fr;gap:14px 18px;height:100%;min-height:0}
+ .svl{grid-column:1;grid-row:1}
+ .svb{grid-column:1;grid-row:2;min-height:0;overflow-y:auto;padding:2px}
+ .svb .card{margin-top:0;margin-bottom:10px}
+ .svb textarea{min-height:58px}
+ .svb .f{margin-top:8px}
+ .svr{grid-column:2;grid-row:1 / 3;min-height:0;overflow-y:auto;padding:2px 4px 8px 2px}
+ .svr>.card{margin-top:0}
+ .svr .card:first-child>div{display:grid}
+ .svr .card:first-child{display:grid;grid-template-columns:1fr 1fr;column-gap:22px;align-content:start}
+ .svr .card:first-child>h3{grid-column:1 / -1}
+ .svewrap{display:flex;flex-direction:column;gap:10px;height:100%;min-height:0}
+ .svehead{flex:none}.svehead h2{margin:0}.svehead p{margin:4px 0 0}
+ .svecols{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+ .svecols>.card{margin:0;overflow-y:auto;min-height:0}
+ .svebtn{flex:none;margin:0}
+}
 /* 房間 */
 body[data-view=room] main#app>div:nth-child(2) .scene{height:clamp(70px,14dvh,190px)}
 .lv{padding:9px 12px;margin-bottom:8px}
@@ -521,7 +559,7 @@ body[data-view=shift] main#app{display:flex;flex-direction:column;overflow:hidde
   <span id="tabs" class="row" style="gap:6px"></span>
 </div></header>
 <main id="app"><div class="card" style="text-align:center"><p class="muted">實驗室開門中…</p></div></main>
-<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v15</footer>
+<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v16</footer>
 <div class="toast" id="toast"></div>
 <div id="instbar" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:70;background:#1E2550;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;line-height:1.5">
   <div style="display:flex;gap:10px;align-items:center"><img src="icon-192.png" alt="" style="width:40px;height:40px;border-radius:10px"><div style="flex:1" id="insttxt"></div>
@@ -1233,12 +1271,12 @@ function renderSurvey(app){
   const t=svType(), S=SURVEYS[t], done=LS.get('dl_sv_'+t,null);
   if(!svDraft||svDraft.type!==t||svDraft.likert.length!==S.likert.length) svDraft={type:t,likert:S.likert.map((q,i)=>{if(!done)return 0;const j=done.likertQ?done.likertQ.indexOf(q):i;return j>=0?(done.likert[j]||0):0}),open:S.open.map((q,i)=>{if(!done)return '';const j=done.openQ?done.openQ.indexOf(q):i;return j>=0?(done.open[j]||''):''})};
   const d=svDraft;
-  app.innerHTML=`<div class="row" style="margin-bottom:10px"><button class="btn ghost sm" data-go="hall">← 地圖</button></div>
-  <div class="hero"><span class="heroface">${charPortrait(curChar(),'happy','rgba(255,255,255,.22)')}</span><h2>📝 ${S.title}</h2><div class="who">${S.intro}<br>填寫對象：${S.who}</div></div>
-  <div class="card"><h3>請依同意程度選擇</h3>${S.likert.map((q,i)=>`<div class="lq"><div class="lqt">${i+1}. ${q}</div><div class="lk">${LIK.map((l,k)=>`<button class="${d.likert[i]===k+1?'on':''}" data-lq="${i}" data-lv="${k+1}"><b>${k+1}</b><small>${l}</small></button>`).join('')}</div></div>`).join('')}</div>
-  <div class="card"><h3>說說你的想法</h3>${S.open.map((q,i)=>`<label class="f">${q}</label><textarea data-oq="${i}" placeholder="自由填寫">${esc(d.open[i])}</textarea>`).join('')}</div>
+  app.innerHTML=`<div class="svwrap"><div class="svl"><div class="row" style="margin-bottom:10px"><button class="btn ghost sm" data-go="hall">← 地圖</button></div>
+  <div class="hero"><span class="heroface">${charPortrait(curChar(),'happy','rgba(255,255,255,.22)')}</span><h2>📝 ${S.title}</h2><div class="who">${S.intro}<br>填寫對象：${S.who}</div></div></div>
+  <div class="svr"><div class="card"><h3>請依同意程度選擇</h3>${S.likert.map((q,i)=>`<div class="lq"><div class="lqt">${i+1}. ${q}</div><div class="lk">${LIK.map((l,k)=>`<button class="${d.likert[i]===k+1?'on':''}" data-lq="${i}" data-lv="${k+1}"><b>${k+1}</b><small>${l}</small></button>`).join('')}</div></div>`).join('')}</div>
+  </div><div class="svb"><div class="card svo"><h3>說說你的想法</h3>${S.open.map((q,i)=>`<label class="f">${q}</label><textarea data-oq="${i}" placeholder="自由填寫">${esc(d.open[i])}</textarea>`).join('')}</div>
   <button class="btn full" id="svok">${done?'更新問卷':'送出問卷'}</button>
-  ${done?`<p class="muted" style="text-align:center">你在 ${fmtDate(done.ts)} 填過，可以修改後重新送出。</p>`:''}`;
+  ${done?`<p class="muted" style="text-align:center">你在 ${fmtDate(done.ts)} 填過，可以修改後重新送出。</p>`:''}</div></div>`;
   app.querySelectorAll('[data-lq]').forEach(b=>b.onclick=()=>{d.likert[+b.dataset.lq]=+b.dataset.lv;b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});
   app.querySelectorAll('[data-oq]').forEach(t=>t.oninput=()=>{d.open[+t.dataset.oq]=t.value});
   $('#svok').onclick=async()=>{
@@ -1363,13 +1401,13 @@ const SURVEY_DEFAULT=JSON.parse(JSON.stringify(SURVEYS));
 function applySurveyConfig(cfg){['learner','staff'].forEach(t=>{const c=cfg?.[t];SURVEYS[t]={...SURVEY_DEFAULT[t],...(c||{})}})}
 function renderSvEdit(app){
   if(!isTeacher){go('hall');return}
-  app.innerHTML=`<h2>問卷設定</h2><p class="muted">一行一題。修改後，新填寫的問卷就會用新題目；舊的回覆仍保留當時的題目，統計時會依題目文字對應。</p>
-  ${['learner','staff'].map(t=>{const S=SURVEYS[t];return `<div class="card" data-t="${t}"><h3>${t==='learner'?'👩‍🎓 學員版（實習生、PGY）':'👩‍🔬 醫檢師版（在職）'}</h3>
+  app.innerHTML=`<div class="svewrap"><div class="svehead"><h2>問卷設定</h2><p class="muted">一行一題。修改後，新填寫的問卷就會用新題目；舊的回覆仍保留當時的題目，統計時會依題目文字對應。</p></div>
+  <div class="svecols">${['learner','staff'].map(t=>{const S=SURVEYS[t];return `<div class="card" data-t="${t}"><h3>${t==='learner'?'👩‍🎓 學員版（實習生、PGY）':'👩‍🔬 醫檢師版（在職）'}</h3>
    <label class="f">問卷標題</label><input type="text" data-k="title" value="${esc(S.title)}">
    <label class="f">開頭說明</label><textarea data-k="intro">${esc(S.intro)}</textarea>
    <label class="f">同意程度題（1–5 分，一行一題）</label><textarea data-k="likert" style="min-height:170px">${esc(S.likert.join('\n'))}</textarea>
-   <label class="f">開放式問題（一行一題）</label><textarea data-k="open" style="min-height:100px">${esc(S.open.join('\n'))}</textarea></div>`}).join('')}
-  <div class="row"><button class="btn" id="svsave" style="flex:2">儲存問卷</button><button class="btn ghost" id="svreset" style="flex:1">恢復預設</button></div>`;
+   <label class="f">開放式問題（一行一題）</label><textarea data-k="open" style="min-height:100px">${esc(S.open.join('\n'))}</textarea></div>`}).join('')}</div>
+  <div class="row svebtn"><button class="btn" id="svsave" style="flex:2">儲存問卷</button><button class="btn ghost" id="svreset" style="flex:1">恢復預設</button></div></div>`;
   const collect=()=>{const o={};app.querySelectorAll('[data-t]').forEach(c=>{const t=c.dataset.t,g=k=>c.querySelector(`[data-k="${k}"]`).value;
     o[t]={title:g('title').trim()||SURVEY_DEFAULT[t].title,intro:g('intro').trim(),who:SURVEY_DEFAULT[t].who,likert:g('likert').split('\n').map(s=>s.trim()).filter(Boolean).slice(0,15),open:g('open').split('\n').map(s=>s.trim()).filter(Boolean).slice(0,8)}});return o};
   $('#svsave').onclick=async()=>{const o=collect();if(!o.learner.likert.length||!o.staff.likert.length)return toast('同意程度題至少要一題');
@@ -1435,18 +1473,22 @@ async function doImport(){
 }
 
 /* ===== 值班情境（管理員可編輯） ===== */
+let bankFormOpen=false, bankJump=false;
+function bankLayout(listH,formH,label){return `<div class="bankwrap ${bankFormOpen?'formopen':''}">${bankSwitch()}<div class="bankcols"><div class="bcol blist"><button class="btn full mobonly" id="bk_new" style="margin-bottom:10px">➕ ${label}</button>${listH}</div><div class="bcol bform"><button class="btn ghost sm mobonly" id="bk_back" style="margin-bottom:8px">← 回列表</button>${formH}</div></div></div>`}
+function bankScroll(app){return [...app.querySelectorAll('.bcol')].map(e=>e.scrollTop)}
+function bankRestore(app,k,formTop){const c=[...app.querySelectorAll('.bcol')];c.forEach((e,i)=>{if(k&&k[i]!=null)e.scrollTop=k[i]});if(formTop){const f=app.querySelector('.bform');if(f)f.scrollTop=0}}
 let shiftEvs=[], shiftEvLoaded=false, bankMode='learn', seDraft=null, seEditing=null;
 const SZONES=['collect','physio','micro','bloodbank','analyzer'];
 const ZIC={collect:'💉',physio:'💓',micro:'🔬',bloodbank:'🩸',analyzer:'🚑'};
 const zoneName=z=>ZONES[z]?.name||z;
 function scenarioList(){const L=shiftEvs.filter(e=>e.enabled!==false&&SZONES.includes(e.zone)&&e.answer);return L.length?L:SHIFT_EVENTS}
-function bankSwitch(){return `<div class="modesw" style="margin-bottom:14px"><button class="${bankMode==='learn'?'on':''}" data-bm="learn">📚 學習題庫</button><button class="${bankMode==='shift'?'on night':''}" data-bm="shift">🌙 值班情境</button></div>`}
-function bindBankSwitch(app){app.querySelectorAll('[data-bm]').forEach(b=>b.onclick=()=>{bankMode=b.dataset.bm;editing=null;draft=null;seEditing=null;seDraft=null;renderBank(app)})}
+function bankSwitch(){return `<div class="modesw bsw" style="grid-template-columns:1fr 1fr"><button class="${bankMode==='learn'?'on':''}" data-bm="learn">📚 學習題庫</button><button class="${bankMode==='shift'?'on night':''}" data-bm="shift">🌙 值班情境</button></div>`}
+function bindBankSwitch(app){app.querySelectorAll('[data-bm]').forEach(b=>b.onclick=()=>{bankMode=b.dataset.bm;editing=null;draft=null;seEditing=null;seDraft=null;bankFormOpen=false;renderBank(app)})}
 function renderShiftBank(app){
   const e0=seEditing?shiftEvs.find(x=>x.id===seEditing):null;
   if(!seDraft) seDraft=e0?{zone:e0.zone,ic:e0.ic||'',title:e0.title,story:e0.story||'',prompt:e0.prompt||'',answer:e0.answer,dis:(e0.options||[]).filter(o=>o!==e0.answer).join('\n'),explain:e0.explain||''}:{zone:'analyzer',ic:'',title:'',story:'',prompt:'',answer:'',dis:'',explain:''};
   const d=seDraft;
-  let h=bankSwitch();
+  let h='';
   h+=`<div class="card" id="seform"><h3>${seEditing?'✏️ 編輯值班情境':'➕ 新增值班情境'}</h3>
    <label class="f">事件發生地點</label><div class="chips">${SZONES.map(z=>`<button class="chip ${d.zone===z?'on':''}" data-sz="${z}">${ZIC[z]} ${zoneName(z)}</button>`).join('')}</div>
    <div class="row" style="align-items:flex-end"><div style="flex:3;min-width:180px"><label class="f">事件標題（顯示在待辦清單）</label><input type="text" id="se_title" maxlength="20" placeholder="例如：急診護理師來電" value="${esc(d.title)}"></div>
@@ -1457,22 +1499,24 @@ function renderShiftBank(app){
    <label class="f">錯誤做法（一行一個，建議 3 個）</label><textarea id="se_dis">${esc(d.dis)}</textarea>
    <label class="f">解說（答完顯示）</label><textarea id="se_exp">${esc(d.explain)}</textarea>
    <div style="height:14px"></div><div class="row"><button class="btn" id="se_save" style="flex:1">${seEditing?'儲存修改':'新增情境'}</button>${seEditing?'<button class="btn ghost" id="se_cancel">取消</button>':''}</div></div>`;
-  h+=seImportCard();
+  const formH=h; h=seImportCard();
   const usingDefault=!shiftEvs.filter(e=>e.enabled!==false).length;
   h+=`<div class="row" style="margin:6px 0 10px"><h3 style="margin:0">值班情境</h3><span class="muted">共 ${shiftEvs.length} 個${usingDefault?'｜目前使用內建預設情境':''}</span></div>
    <p class="muted" style="margin-top:0">值班時會從「啟用」的情境中隨機抽，再加上學習題庫的選擇題。關掉的情境不會出現。</p>`;
   h+=SZONES.map(z=>{const L=shiftEvs.filter(e=>e.zone===z);if(!L.length)return'';return `<div class="card qlist"><h3>${ZIC[z]} ${zoneName(z)} <span class="muted">（${L.length}）</span></h3>${L.map(e=>`<div class="item" style="${e.enabled===false?'opacity:.45':''}"><div class="thumb">${esc(e.ic||ZIC[z])}</div><div class="t"><b>${esc(e.title)}</b><span class="muted" style="font-size:12px">${esc((e.story||e.prompt||'').slice(0,26))}</span></div>
      <button class="btn ghost sm" data-seon="${e.id}">${e.enabled===false?'啟用':'停用'}</button><button class="btn ghost sm" data-seed="${e.id}">編輯</button><button class="btn warn sm" data-serm="${e.id}">刪</button></div>`).join('')}</div>`}).join('')||'<div class="card"><p class="muted" style="margin:0">還沒有自訂情境，遊戲會使用內建的預設情境。</p></div>';
-  app.innerHTML=h; bindBankSwitch(app); bindSeImport(app);
+  const keepS=bankScroll(app); app.innerHTML=bankLayout(h,formH,'新增值班情境'); bankRestore(app,keepS,bankJump); bankJump=false; bindBankSwitch(app); bindSeImport(app);
+  $('#bk_new').onclick=()=>{seEditing=null;seDraft=null;bankFormOpen=true;bankJump=true;renderShiftBank(app)};
+  $('#bk_back').onclick=()=>{seEditing=null;seDraft=null;bankFormOpen=false;renderShiftBank(app)};
   const sync=()=>{const g=id=>$(id);d.title=g('#se_title').value;d.ic=g('#se_ic').value;d.story=g('#se_story').value;d.prompt=g('#se_prompt').value;d.answer=g('#se_ans').value;d.dis=g('#se_dis').value;d.explain=g('#se_exp').value};
   app.querySelectorAll('[data-sz]').forEach(b=>b.onclick=()=>{sync();d.zone=b.dataset.sz;renderShiftBank(app)});
-  if($('#se_cancel')) $('#se_cancel').onclick=()=>{seEditing=null;seDraft=null;renderShiftBank(app)};
+  if($('#se_cancel')) $('#se_cancel').onclick=()=>{seEditing=null;seDraft=null;bankFormOpen=false;renderShiftBank(app)};
   $('#se_save').onclick=async()=>{sync();const a=d.answer.trim();if(!d.title.trim())return toast('請填事件標題');if(!a)return toast('請填正確做法');
     const dis=d.dis.split('\n').map(x=>x.trim()).filter(x=>x&&x!==a);if(!dis.length)return toast('請至少填一個錯誤做法');
     const data={zone:d.zone,ic:d.ic.trim(),title:d.title.trim(),story:d.story.trim(),prompt:d.prompt.trim()||'你應該怎麼處理？',answer:a,options:[a,...dis].slice(0,6),explain:d.explain.trim(),enabled:e0?e0.enabled!==false:true,created:e0?.created||Date.now()};
     const b=$('#se_save');b.disabled=true;b.textContent='儲存中…';
-    try{await db.doc('shiftEvents/'+(seEditing||('se'+uid()))).set(data);toast(seEditing?'已更新':'已新增 ✅');seEditing=null;seDraft={zone:d.zone,ic:'',title:'',story:'',prompt:'',answer:'',dis:'',explain:''};renderShiftBank(app)}catch(e){b.disabled=false;b.textContent='再試一次';toast('儲存失敗')}};
-  app.querySelectorAll('[data-seed]').forEach(b=>b.onclick=()=>{seEditing=b.dataset.seed;seDraft=null;renderShiftBank(app);window.scrollTo(0,0)});
+    try{await db.doc('shiftEvents/'+(seEditing||('se'+uid()))).set(data);toast(seEditing?'已更新':'已新增 ✅');if(seEditing)bankFormOpen=false;seEditing=null;seDraft={zone:d.zone,ic:'',title:'',story:'',prompt:'',answer:'',dis:'',explain:''};renderShiftBank(app)}catch(e){b.disabled=false;b.textContent='再試一次';toast('儲存失敗')}};
+  app.querySelectorAll('[data-seed]').forEach(b=>b.onclick=()=>{seEditing=b.dataset.seed;seDraft=null;bankFormOpen=true;bankJump=true;renderShiftBank(app)});
   app.querySelectorAll('[data-seon]').forEach(b=>b.onclick=async()=>{const e=shiftEvs.find(x=>x.id===b.dataset.seon);try{const {id,...rest}=e;await db.doc('shiftEvents/'+id).set({...rest,enabled:e.enabled===false})}catch(err){toast('更新失敗')}});
   app.querySelectorAll('[data-serm]').forEach(b=>b.onclick=async()=>{if(!b.dataset.s){b.dataset.s=1;b.textContent='確定？';return}try{await db.doc('shiftEvents/'+b.dataset.serm).delete();toast('已刪除')}catch(e){toast('刪除失敗')}});
 }
@@ -1651,13 +1695,15 @@ function renderBank(app){
     <div class="row" style="margin-top:14px">
       <span style="flex:1"></span><span class="muted">題目順序</span><input type="number" id="f_ord" value="${esc(d.order)}" style="width:80px"></div>
     <div style="height:14px"></div><div class="row"><button class="btn" id="f_save" style="flex:1">${editing?'儲存修改':'新增題目'}</button>${editing?'<button class="btn ghost" id="f_cancel">取消</button>':''}</div></div>`;
-  h=bankSwitch()+importCard()+backupCard()+h;
+  const formH=h; h=importCard()+backupCard();
   // list
   const lv=levelsOf(bankRoom);
   h+=`<div class="row" style="margin:6px 0 10px"><h3 style="margin:0">題庫</h3><span class="muted">共 ${questions.length} 題</span></div>
     <div class="chips" style="margin-bottom:10px">${Object.entries(ROOMS).map(([k,r])=>`<button class="chip ${bankRoom===k?'on':''}" data-lroom="${k}">${r.ic} ${r.name} <span class="muted">${questions.filter(q=>q.room===k).length}</span></button>`).join('')}</div>`;
   h+=lv.length?lv.map(l=>`<div class="card qlist"><h3>${esc(l.name)} <span class="muted">（${l.qs.length} 題${l.qs.length>QN?`，每次隨機出 ${QN} 題`:''}）</span></h3>${l.qs.map(q=>`<div class="item"><div class="thumb">${q.img?`<img src="${q.img}" alt="">`:q.type==='sort'?'🔢':'📝'}</div><div class="t"><b>${esc(q.prompt||q.answer)}</b><span class="tag">${TYPE_N[q.type]}</span></div><button class="btn ghost sm" data-ed="${q.id}">編輯</button><button class="btn warn sm" data-rm="${q.id}">刪</button></div>`).join('')}</div>`).join(''):`<div class="card"><p class="muted" style="margin:0">這個房間還沒有題目。</p></div>`;
-  app.innerHTML=h;
+  const keepS=bankScroll(app); app.innerHTML=bankLayout(h,formH,'新增題目'); bankRestore(app,keepS,bankJump); bankJump=false;
+  $('#bk_new').onclick=()=>{bankSync&&bankSync();editing=null;const k=draft?{room:draft.room,level:draft.level,lvOrder:draft.lvOrder,type:draft.type}:{};draft={...blankDraft(),...k};bankFormOpen=true;bankJump=true;renderBank(app)};
+  $('#bk_back').onclick=()=>{editing=null;draft=null;bankFormOpen=false;renderBank(app)};
   // bind
   const sync=()=>{const g=id=>$(id);if(g('#f_level'))d.level=g('#f_level').value;if(g('#f_lvo'))d.lvOrder=g('#f_lvo').value;if(g('#f_prompt'))d.prompt=g('#f_prompt').value;if(g('#f_ans'))d.answer=g('#f_ans').value;if(g('#f_dis'))d.distractors=g('#f_dis').value;if(g('#f_items'))d.items=g('#f_items').value;if(g('#f_hint'))d.hint=g('#f_hint').value;if(g('#f_exp'))d.explain=g('#f_exp').value;if(g('#f_test'))d.inTest=g('#f_test').checked;if(g('#f_ord'))d.order=g('#f_ord').value};
   bankSync=sync; bindImport(app); bindBankSwitch(app); bindBackup(app);
@@ -1668,7 +1714,7 @@ function renderBank(app){
   if($('#f_rmimg')) $('#f_rmimg').onclick=()=>{sync();d.img='';renderBank(app)};
   if($('#f_spot')) $('#f_spot').onclick=e=>{sync();const r=$('#f_spot img').getBoundingClientRect();d.spot={x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};renderBank(app)};
   if($('#f_r')) $('#f_r').oninput=e=>{d.r=+e.target.value;$('#rv').textContent=d.r;const m=$('#f_spot .mark');if(m)m.style.width=(d.r*2)+'%'};
-  if($('#f_cancel')) $('#f_cancel').onclick=()=>{editing=null;draft=null;renderBank(app)};
+  if($('#f_cancel')) $('#f_cancel').onclick=()=>{editing=null;draft=null;bankFormOpen=false;renderBank(app)};
   $('#f_save').onclick=async()=>{sync();
     const data={room:d.room,level:d.level.trim()||'第一關',lvOrder:d.lvOrder===''?1:+d.lvOrder,type:d.type,prompt:d.prompt.trim(),hint:d.hint.trim(),explain:d.explain.trim(),inTest:!!d.inTest,order:d.order===''?(questions.filter(q=>q.room===d.room&&q.level===d.level.trim()).length+1):+d.order,created:editing?(questions.find(q=>q.id===editing)?.created||Date.now()):Date.now()};
     if(d.type==='choice'){const a=d.answer.trim();if(!a)return toast('請填正確答案');const dis=d.distractors.split('\n').map(s=>s.trim()).filter(s=>s&&s!==a);if(!dis.length&&d.room!=='micro')return toast('請至少填一個錯誤選項');data.answer=a;data.options=[a,...dis].slice(0,6);if(d.img)data.img=d.img}
@@ -1676,9 +1722,9 @@ function renderBank(app){
     if(d.type==='spot'){if(!d.img)return toast('請放一張圖片');if(!d.spot)return toast('請在圖片上點出錯誤位置');data.img=d.img;data.spot={x:d.spot.x,y:d.spot.y,r:d.r/100}}
     const b=$('#f_save');b.disabled=true;b.textContent='儲存中…';
     try{ if(editing) await db.doc('questions/'+editing).set(data); else await db.collection('questions').doc('q'+uid()).set(data);
-      toast(editing?'已更新':'已新增 ✅'); const keep={room:d.room,level:d.level,lvOrder:d.lvOrder,type:d.type}; editing=null; draft={...blankDraft(),...keep}; bankRoom=d.room; renderBank(app);
+      toast(editing?'已更新':'已新增 ✅'); if(editing)bankFormOpen=false; const keep={room:d.room,level:d.level,lvOrder:d.lvOrder,type:d.type}; editing=null; draft={...blankDraft(),...keep}; bankRoom=d.room; renderBank(app);
     }catch(e){b.disabled=false;b.textContent='再試一次';toast(e?.code==='quota_exceeded'?'空間已滿，請刪除一些題目':'儲存失敗，請再試一次')}};
-  app.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{editing=b.dataset.ed;draft=null;renderBank(app);window.scrollTo(0,0)});
+  app.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{editing=b.dataset.ed;draft=null;bankFormOpen=true;bankJump=true;renderBank(app)});
   app.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{if(!b.dataset.s){b.dataset.s=1;b.textContent='確定？';setTimeout(()=>{if(b.isConnected){b.textContent='刪';delete b.dataset.s}},3000);return}try{await db.doc('questions/'+b.dataset.rm).delete();toast('已刪除')}catch(e){toast('刪除失敗')}});
 }
 
