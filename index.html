@@ -582,7 +582,7 @@ body[data-view=shift] main#app{display:flex;flex-direction:column;overflow:hidde
   <span id="tabs" class="row" style="gap:6px"></span>
 </div></header>
 <main id="app"><div class="card" style="text-align:center"><p class="muted">實驗室開門中…</p></div></main>
-<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v21</footer>
+<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v22</footer>
 <div class="toast" id="toast"></div>
 <div id="instbar" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:70;background:#1E2550;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;line-height:1.5">
   <div style="display:flex;gap:10px;align-items:center"><img src="icon-192.png" alt="" style="width:40px;height:40px;border-radius:10px"><div style="flex:1" id="insttxt"></div>
@@ -909,8 +909,7 @@ function renderHall(app){
   if(mode==='shift'){ h=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol">${renderShiftIntro()}</div>${svBar()}</div>`; app.innerHTML=h; bindSv();
     app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;LS.set('dl_mode',mode);render()});
     $('#startShift').onclick=startShift;
-    app.querySelectorAll('[data-diff]').forEach(b=>b.onclick=()=>{shiftDiff=b.dataset.diff;LS.set('dl_diff_'+(player?.id||''),shiftDiff);app.querySelectorAll('[data-diff]').forEach(x=>x.classList.toggle('on',x===b))});
-    drawLB(); return; }
+    app.querySelectorAll('[data-diff]').forEach(b=>b.onclick=()=>{shiftDiff=b.dataset.diff;LS.set('dl_diff_'+(player?.id||''),shiftDiff);app.querySelectorAll('[data-diff]').forEach(x=>x.classList.toggle('on',x===b))}); return; }
   if(loadedQ && !questions.length){
     h+=`<div class="card" style="text-align:center"><div style="font-size:44px">🧪</div><h3>實驗室還在佈置中</h3><p class="muted">${isTeacher?'到「題庫」新增題目，房間就會出現關卡。':'老師還沒放題目，晚點再來！'}</p></div>`;
     app.innerHTML=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol"></div>${svBar()}</div>`;bindSv();app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;LS.set('dl_mode',mode);render()});return;
@@ -1198,7 +1197,6 @@ function renderShiftIntro(){
    <ul class="nrules"><li>事件分 <i class="pb" style="background:#E5484D">危急</i> <i class="pb" style="background:#F0A23B">急件</i> <i class="pb" style="background:#3FAE6A">一般</i>，<b style="color:#FFD66B">要先處理危急的</b>，順序錯會扣分</li><li>前 5 件事一件一件來，之後進入<b style="color:#FF8A80">🔥 尖峰時段</b>，好幾個科室同時出狀況</li><li>處理錯或逾時，單位會再打電話來，變成<b style="color:#FF8A80">連鎖事件</b></li><li>走路花時間；精力太低走得更慢，記得去休息室喝咖啡</li><li>天亮評等 S／A／B／C，<b style="color:#FFD66B">拿 S 才算真正過關</b></li></ul>
    <div class="diffs">${Object.entries(DIFF).map(([k,v])=>`<button class="diff ${(shiftDiff||LS.get('dl_diff_'+(player?.id||''),null)||defDiff())===k?'on':''}" data-diff="${k}"><b>${v.name}</b><small>${v.d}</small></button>`).join('')}</div>
    ${best!=null?`<p style="margin:8px 0 0">你的最佳紀錄：<b style="color:#FFD66B">${best} 分</b></p>`:''}
-   <div class="lb" id="lb"><b>🏆 本週大夜班排行榜</b><div id="lbl" class="muted" style="color:#C9CEF2">載入中…</div></div>
    <div class="ichar"><span class="pf big">${charPortrait(curChar(),'normal')}</span><span><small style="color:#C9CEF2">今晚值班的是</small><b style="display:block;font-size:20px;color:#fff">${esc(curChar().name)}</b><small style="color:#FFD66B">${curChar().sex==='f'?'女':'男'}醫檢師</small></span></div>
    <button class="btn acc full" id="startShift">🌙 開始值班</button></div>`;
 }
