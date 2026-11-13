@@ -455,6 +455,11 @@ body[data-view=bank] main#app{max-width:1180px;overflow:hidden}
  .svecols>.card{margin:0;overflow-y:auto;min-height:0}
  .svebtn{flex:none;margin:0}
 }
+.drop .pastehint{display:inline-block;margin:4px 0 2px;font-size:13px;color:var(--ink);font-weight:700}
+.drop.over{border-color:var(--pri);background:#E6E9FB}
+@media (max-width:899px){.drop .pastehint{display:none}}
+.lvhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.lvhead h3{flex:1;min-width:0;margin:0}
+.qlist .lvhead{margin-bottom:6px}
 /* 房間 */
 body[data-view=room] main#app>div:nth-child(2) .scene{height:clamp(70px,14dvh,190px)}
 .lv{padding:9px 12px;margin-bottom:8px}
@@ -559,7 +564,7 @@ body[data-view=shift] main#app{display:flex;flex-direction:column;overflow:hidde
   <span id="tabs" class="row" style="gap:6px"></span>
 </div></header>
 <main id="app"><div class="card" style="text-align:center"><p class="muted">實驗室開門中…</p></div></main>
-<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v17</footer>
+<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v19</footer>
 <div class="toast" id="toast"></div>
 <div id="instbar" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:70;background:#1E2550;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;line-height:1.5">
   <div style="display:flex;gap:10px;align-items:center"><img src="icon-192.png" alt="" style="width:40px;height:40px;border-radius:10px"><div style="flex:1" id="insttxt"></div>
@@ -1497,6 +1502,7 @@ async function doImport(){
 /* ===== 值班情境（管理員可編輯） ===== */
 let bankFormOpen=false, bankJump=false;
 function bankLayout(listH,formH,label){return `<div class="bankwrap ${bankFormOpen?'formopen':''}">${bankSwitch()}<div class="bankcols"><div class="bcol blist"><button class="btn full mobonly" id="bk_new" style="margin-bottom:10px">➕ ${label}</button>${listH}</div><div class="bcol bform"><button class="btn ghost sm mobonly" id="bk_back" style="margin-bottom:8px">← 回列表</button>${formH}</div></div></div>`}
+document.addEventListener('paste',e=>{if(view!=='bank'||bankMode!=='learn'||!window._bankPasteImg)return;const f=[...(e.clipboardData?.items||[])].filter(i=>i.kind==='file'&&i.type.startsWith('image/')).map(i=>i.getAsFile())[0];if(!f)return;e.preventDefault();if(!bankFormOpen&&innerWidth<900){bankFormOpen=true}window._bankPasteImg(f)});
 function bankScroll(app){return [...app.querySelectorAll('.bcol')].map(e=>e.scrollTop)}
 function bankRestore(app,k,formTop){const c=[...app.querySelectorAll('.bcol')];c.forEach((e,i)=>{if(k&&k[i]!=null)e.scrollTop=k[i]});if(formTop){const f=app.querySelector('.bform');if(f)f.scrollTop=0}}
 let shiftEvs=[], shiftEvLoaded=false, bankMode='learn', seDraft=null, seEditing=null;
@@ -1704,7 +1710,7 @@ function renderBank(app){
     <label class="f">題型</label><div class="chips">${Object.entries(TYPE_N).map(([k,n])=>`<button class="chip ${d.type===k?'on':''}" data-ftype="${k}">${n}</button>`).join('')}</div>
     <label class="f">題目文字</label><textarea id="f_prompt" placeholder="${d.type==='spot'?'例如：這張心電圖哪裡有問題？請點出來':d.type==='sort'?'例如：請依正確採血順序排列':'例如：箭頭所指的細胞是？'}">${esc(d.prompt)}</textarea>`;
   if(d.type!=='sort'){
-    h+=`<label class="f">圖片${d.type==='spot'?'（必填）':'（可不放）'}</label><label class="drop" for="f_file">📷 拍照或從相簿選擇<br><span class="muted">會自動壓縮；請勿拍到病人姓名、病歷號</span></label><input type="file" id="f_file" accept="image/*" hidden>`;
+    h+=`<label class="f">圖片${d.type==='spot'?'（必填）':'（可不放）'}</label><label class="drop" for="f_file" id="f_drop">📷 拍照或從相簿選擇<br><b class="pastehint">也可以複製圖片後，直接按 Ctrl+V（Mac：⌘+V）貼上，或把圖片拖進來</b><br><span class="muted">會自動壓縮；請勿拍到病人姓名、病歷號</span></label><input type="file" id="f_file" accept="image/*" hidden>${navigator.clipboard&&navigator.clipboard.read?'<button class="btn ghost sm" id="f_paste" type="button" style="margin-top:6px">📋 貼上剪貼簿的圖片</button>':''}`;
     if(d.img && d.type==='choice') h+=`<div style="margin-top:8px" class="row"><img src="${d.img}" alt="" style="max-height:150px;border-radius:12px;max-width:70%"><button class="btn warn sm" id="f_rmimg">移除圖片</button></div>`;
     if(d.img && d.type==='spot') h+=`<p class="muted" style="margin:10px 0 6px">👇 點圖片標出「錯誤的位置」，綠圈是判定範圍</p><div class="spotwrap" id="f_spot"><img src="${d.img}" alt="">${d.spot?`<span class="mark ans" style="left:${d.spot.x*100}%;top:${d.spot.y*100}%;width:${d.r*2}%;height:auto;aspect-ratio:1;margin:0;transform:translate(-50%,-50%)"></span>`:''}</div>
       <label class="f">判定範圍大小：<span id="rv">${d.r}</span>%</label><input type="range" id="f_r" min="3" max="25" value="${d.r}" style="width:100%">`;
@@ -1722,7 +1728,7 @@ function renderBank(app){
   const lv=levelsOf(bankRoom);
   h+=`<div class="row" style="margin:6px 0 10px"><h3 style="margin:0">題庫</h3><span class="muted">共 ${questions.length} 題</span></div>
     <div class="chips" style="margin-bottom:10px">${Object.entries(ROOMS).map(([k,r])=>`<button class="chip ${bankRoom===k?'on':''}" data-lroom="${k}">${r.ic} ${r.name} <span class="muted">${questions.filter(q=>q.room===k).length}</span></button>`).join('')}</div>`;
-  h+=lv.length?lv.map(l=>`<div class="card qlist"><h3>${esc(l.name)} <span class="muted">（${l.qs.length} 題${l.qs.length>QN?`，每次隨機出 ${QN} 題`:''}）</span></h3>${l.qs.map(q=>`<div class="item"><div class="thumb">${q.img?`<img src="${q.img}" alt="">`:q.type==='sort'?'🔢':'📝'}</div><div class="t"><b>${esc(q.prompt||q.answer)}</b><span class="tag">${TYPE_N[q.type]}</span></div><button class="btn ghost sm" data-ed="${q.id}">編輯</button><button class="btn warn sm" data-rm="${q.id}">刪</button></div>`).join('')}</div>`).join(''):`<div class="card"><p class="muted" style="margin:0">這個房間還沒有題目。</p></div>`;
+  h+=lv.length?lv.map(l=>`<div class="card qlist"><div class="lvhead" data-lvh="${esc(l.name)}"><h3>${esc(l.name)} <span class="muted">（${l.qs.length} 題${l.qs.length>QN?`，每次隨機出 ${QN} 題`:''}）</span></h3><button class="btn ghost sm" data-rnlv="${esc(l.name)}">✏️ 改名／合併</button></div>${l.qs.map(q=>`<div class="item"><div class="thumb">${q.img?`<img src="${q.img}" alt="">`:q.type==='sort'?'🔢':'📝'}</div><div class="t"><b>${esc(q.prompt||q.answer)}</b><span class="tag">${TYPE_N[q.type]}</span></div><button class="btn ghost sm" data-ed="${q.id}">編輯</button><button class="btn warn sm" data-rm="${q.id}">刪</button></div>`).join('')}</div>`).join(''):`<div class="card"><p class="muted" style="margin:0">這個房間還沒有題目。</p></div>`;
   const keepS=bankScroll(app); app.innerHTML=bankLayout(h,formH,'新增題目'); bankRestore(app,keepS,bankJump); bankJump=false;
   $('#bk_new').onclick=()=>{bankSync&&bankSync();editing=null;const k=draft?{room:draft.room,level:draft.level,lvOrder:draft.lvOrder,type:draft.type}:{};draft={...blankDraft(),...k};bankFormOpen=true;bankJump=true;renderBank(app)};
   $('#bk_back').onclick=()=>{editing=null;draft=null;bankFormOpen=false;renderBank(app)};
@@ -1732,7 +1738,11 @@ function renderBank(app){
   app.querySelectorAll('[data-froom]').forEach(b=>b.onclick=()=>{sync();d.room=b.dataset.froom;renderBank(app)});
   app.querySelectorAll('[data-ftype]').forEach(b=>b.onclick=()=>{sync();d.type=b.dataset.ftype;renderBank(app)});
   app.querySelectorAll('[data-lroom]').forEach(b=>b.onclick=()=>{sync();bankRoom=b.dataset.lroom;renderBank(app)});
-  if($('#f_file')) $('#f_file').onchange=async e=>{const f=e.target.files[0];if(!f)return;sync();toast('照片處理中…');try{const u=await compress(f);if(!u)return toast('照片太大，請換一張');d.img=u;d.spot=null;renderBank(app);toast('照片已載入')}catch(err){toast('無法讀取這張照片')}};
+  const useImg=async f=>{if(!f)return;sync();toast('照片處理中…');try{const u=await compress(f);if(!u)return toast('照片太大，請換一張');d.img=u;d.spot=null;renderBank(app);toast('照片已載入')}catch(err){toast('無法讀取這張照片')}};
+  window._bankPasteImg=$('#form')?useImg:null;
+  if($('#f_file')) $('#f_file').onchange=e=>useImg(e.target.files[0]);
+  if($('#f_drop')){const z=$('#f_drop');z.ondragover=e=>{e.preventDefault();z.classList.add('over')};z.ondragleave=()=>z.classList.remove('over');z.ondrop=e=>{e.preventDefault();z.classList.remove('over');const f=[...(e.dataTransfer?.files||[])].find(x=>x.type.startsWith('image/'));f?useImg(f):toast('請拖曳圖片檔')}}
+  if($('#f_paste')) $('#f_paste').onclick=async()=>{try{const items=await navigator.clipboard.read();for(const it of items){const t=it.types.find(x=>x.startsWith('image/'));if(t){const b=await it.getType(t);return useImg(new File([b],'paste.'+t.split('/')[1],{type:t}))}}toast('剪貼簿裡沒有圖片，請先複製一張圖片')}catch(e){toast('瀏覽器不允許讀取剪貼簿，請改按 Ctrl+V 貼上')}};
   if($('#f_rmimg')) $('#f_rmimg').onclick=()=>{sync();d.img='';renderBank(app)};
   if($('#f_spot')) $('#f_spot').onclick=e=>{sync();const r=$('#f_spot img').getBoundingClientRect();d.spot={x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height};renderBank(app)};
   if($('#f_r')) $('#f_r').oninput=e=>{d.r=+e.target.value;$('#rv').textContent=d.r;const m=$('#f_spot .mark');if(m)m.style.width=(d.r*2)+'%'};
@@ -1746,6 +1756,19 @@ function renderBank(app){
     try{ if(editing) await db.doc('questions/'+editing).set(data); else await db.collection('questions').doc('q'+uid()).set(data);
       toast(editing?'已更新':'已新增 ✅'); if(editing)bankFormOpen=false; const keep={room:d.room,level:d.level,lvOrder:d.lvOrder,type:d.type}; editing=null; draft={...blankDraft(),...keep}; bankRoom=d.room; renderBank(app);
     }catch(e){b.disabled=false;b.textContent='再試一次';toast(e?.code==='quota_exceeded'?'空間已滿，請刪除一些題目':'儲存失敗，請再試一次')}};
+  app.querySelectorAll('[data-rnlv]').forEach(b=>b.onclick=()=>{const old=b.dataset.rnlv,box=b.closest('.lvhead'),others=levelsOf(bankRoom).map(x=>x.name).filter(n=>n!==old);
+    box.innerHTML=`<div style="flex:1;min-width:0"><label class="f" style="margin-top:0">類別新名稱</label><input type="text" id="rn_in" value="${esc(old)}" list="rn_dl"><datalist id="rn_dl">${others.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+      <p class="muted" style="margin:6px 0 0;font-size:13px">${others.length?`想合併就輸入另一個類別的名稱（例如「${esc(others[0])}」），這類的題目會全部併過去。`:'改完按儲存。'}</p>
+      <div class="row" style="margin-top:8px"><button class="btn sm" id="rn_ok">儲存</button><button class="btn ghost sm" id="rn_no">取消</button></div></div>`;
+    const inp=$('#rn_in');inp.focus();inp.select();
+    $('#rn_no').onclick=()=>renderBank(app);
+    const go2=async()=>{const nn=inp.value.trim();if(!nn)return toast('請輸入名稱');if(nn===old)return renderBank(app);
+      const L=levelsOf(bankRoom),src=L.find(x=>x.name===old),tgt=L.find(x=>x.name===nn);if(!src)return renderBank(app);
+      const ord=tgt?tgt.ord:src.ord;const ok=$('#rn_ok');ok.disabled=true;ok.textContent='更新中…';
+      try{await Promise.all(src.qs.map(q=>{const r=db.doc('questions/'+q.id),d={level:nn,lvOrder:ord,room:bankRoom};return r.update?r.update(d):r.set(d,{merge:true})}));
+        src.qs.forEach(q=>{q.level=nn;q.lvOrder=ord;q.room=bankRoom});toast(tgt?`已合併到「${nn}」，共 ${src.qs.length+tgt.qs.length} 題 ✅`:`已改名為「${nn}」✅`);renderBank(app)}
+      catch(e){toast('更新失敗，請再試一次');ok.disabled=false;ok.textContent='儲存'}};
+    $('#rn_ok').onclick=go2;inp.onkeydown=e=>{if(e.key==='Enter')go2()}});
   app.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>{editing=b.dataset.ed;draft=null;bankFormOpen=true;bankJump=true;renderBank(app)});
   app.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{if(!b.dataset.s){b.dataset.s=1;b.textContent='確定？';setTimeout(()=>{if(b.isConnected){b.textContent='刪';delete b.dataset.s}},3000);return}try{await db.doc('questions/'+b.dataset.rm).delete();toast('已刪除')}catch(e){toast('刪除失敗')}});
 }
@@ -1784,7 +1807,7 @@ function subResults(){
 }
 function liveRender(){
   if(['hall','room','scores','cert'].includes(view)) render();
-  if(view==='bank' && !document.activeElement?.closest?.('#form')){ try{bankSync&&$('#form')&&bankSync()}catch(e){} render(); }
+  if(view==='bank' && !document.activeElement?.closest?.('#form') && !document.getElementById('rn_in')){ try{bankSync&&$('#form')&&bankSync()}catch(e){} render(); }
 }
 (async()=>{
   render();
