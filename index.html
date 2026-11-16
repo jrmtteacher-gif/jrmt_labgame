@@ -482,6 +482,7 @@ body[data-view=bank] main#app{max-width:1180px;overflow:hidden}
 @media (min-width:900px){.slogan{font-size:17px;padding:10px 16px}}
 .imgimp{margin-top:14px;padding:12px;border:2px dashed var(--line,#E4E0D2);border-radius:14px;background:#FAFAF6}
 .imgimp code{background:#EEF0F8;border-radius:6px;padding:0 4px}
+.tag.k-exam{background:#E7ECFF;color:#3A4AA6}.tag.k-practice{background:#E3F5E9;color:#227A45}
 /* 房間 */
 body[data-view=room] main#app>div:nth-child(2) .scene{height:clamp(70px,14dvh,190px)}
 .lv{padding:9px 12px;margin-bottom:8px}
@@ -586,7 +587,7 @@ body[data-view=shift] main#app{display:flex;flex-direction:column;overflow:hidde
   <span id="tabs" class="row" style="gap:6px"></span>
 </div></header>
 <main id="app"><div class="card" style="text-align:center"><p class="muted">實驗室開門中…</p></div></main>
-<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v24</footer>
+<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v25</footer>
 <div class="toast" id="toast"></div>
 <div id="instbar" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:70;background:#1E2550;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;line-height:1.5">
   <div style="display:flex;gap:10px;align-items:center"><img src="icon-192.png" alt="" style="width:40px;height:40px;border-radius:10px"><div style="flex:1" id="insttxt"></div>
@@ -933,7 +934,7 @@ function renderHall(app){
     <button class="hbtn" id="final" style="${allDone?'':'opacity:.55'}"><b>${allDone?'🏆':'🔒'} 總複習大挑戰</b><small>${allDone?'全部房間隨機 10 題':'集滿所有印章才解鎖'}</small></button>
     <button class="hbtn" id="certb" style="${allDone?'':'opacity:.55'}"><b>${allDone?'📜':'🔒'} 細節偵探證書</b><small>${allDone?'恭喜！點我領取':'集滿所有印章才能領'}</small></button>
   </div>`;
-  app.innerHTML=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol"><div class="slogan">📚 題目參考十年內國考題</div>${P}</div>${svBar()}</div>`;
+  app.innerHTML=`<div class="hallwrap"><div class="hcol">${h}</div><div class="rcol"><div class="slogan">${player?.role==='實習生'?'📚 題目參考十年內國考題':'🏥 臨床實務為主＋📘 國考複習'}</div>${P}</div>${svBar()}</div>`;
   app.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;LS.set('dl_mode',mode);render()});
   app.querySelectorAll('[data-room]').forEach(b=>b.onclick=()=>{roomSel=b.dataset.room;go('room')});
   $('#svb').onclick=()=>go('survey');
@@ -973,9 +974,20 @@ function makeItem(q){
   return it;
 }
 const QN=10;
+/* ===== 國考題／實務題 ===== */
+const PRAC_RE=/送到|多久內|污染|特別注意|CBC.{0,12}(低|高|看到|出現)|解凍|同一管路|第一步|保存的?溫度|保存條件|保存於|輸注前|檢體量|離心|本院|院內|大夜|值班|急診|病房|門診|你應該|你要|你會|該怎麼|怎麼辦|如何處理|處理方式|通報|退件|送檢|送達|衛教|品管液|重抽|重驗|採血|抽血|採檢|針扎|檢體.{0,8}(處理|保存|運送|採集)|心電圖時|做心電圖|貼電極|導程.{0,6}(貼|接反)|病人.{0,10}(說|突然|抽血|做)|Delta check|危急值|危險值|發報告|核對|身分/i;
+function inferKind(q){if(q.kind==='exam'||q.kind==='practice')return q.kind;if(q.img||q.hasImg||q.type==='spot')return 'practice';
+  const t=(q.prompt||'')+' '+(q.answer||'');if(PRAC_RE.test(t))return 'practice';return q.room==='collect'&&!/心電圖|肺功能|肺量計|導程|波|心律|肺/.test(t+(q.level||''))&&!/機轉|公式|計算/.test(t)?'practice':'exam'}
+const KIND_N={exam:'📘 國考',practice:'🏥 實務'};
+const kindOf=q=>inferKind(q);
+const EXAM_RATIO={'實習生':.7,'PGY':.5,'醫檢師':.2};
+function pickMix(pool,n){if(pool.length<=n)return shuffle(pool);const r=EXAM_RATIO[player?.role]??.5;
+  const ex=shuffle(pool.filter(q=>kindOf(q)==='exam')),pr=shuffle(pool.filter(q=>kindOf(q)!=='exam'));
+  let ne=Math.round(n*r),np=n-ne;if(ne>ex.length){np+=ne-ex.length;ne=ex.length}if(np>pr.length){ne=Math.min(ex.length,ne+np-pr.length);np=pr.length}
+  return shuffle([...ex.slice(0,ne),...pr.slice(0,np)])}
 function startLevel(l){
   if(!l.qs.length) return;
-  const pick=l.qs.length>QN?shuffle(l.qs).slice(0,QN):l.qs;
+  const pick=l.qs.length>QN?pickMix(l.qs,QN):l.qs;
   play={kind:'level',levelId:l.id,room:l.room,label:l.name,items:pick.map(makeItem),i:0,hints:3,hintsUsed:0,start:Date.now(),fb:false};
   go('play');
 }
@@ -984,10 +996,10 @@ function startTest(label){
   play={kind:'test',levelId:'test::'+label,room:'',label,items:qs.map(makeItem),i:0,hints:0,hintsUsed:0,start:Date.now(),fb:false};
   go('play');
 }
-function startRandom(room){const qs=shuffle(questions.filter(q=>q.room===room)).slice(0,QN);if(!qs.length)return toast('這個房間還沒有題目');
+function startRandom(room){const qs=pickMix(questions.filter(q=>q.room===room),QN);if(!qs.length)return toast('這個房間還沒有題目');
   play={kind:'random',levelId:'random::'+room,room,label:`隨機 ${qs.length} 題`,items:qs.map(makeItem),i:0,hints:3,hintsUsed:0,start:Date.now(),fb:false};go('play')}
 function startFinal(){
-  const qs=shuffle(questions).slice(0,10);
+  const qs=pickMix(questions,10);
   play={kind:'final',levelId:'final',room:'',label:'總複習大挑戰',items:qs.map(makeItem),i:0,hints:3,hintsUsed:0,start:Date.now(),fb:false};
   go('play');
 }
@@ -1554,11 +1566,11 @@ const ROOM_BY_NAME=n=>{n=String(n||'').trim();if(!n)return null;if(ROOM_ALIAS[n]
 function rowsToQs(rows){
   const out=[],errs=[],warns=[];
   rows.forEach((r,i)=>{r=r.map(x=>String(x??'').trim());if(!r.some(Boolean))return;if(i===0&&/題目/.test(r.join('')))return;
-    const [prompt,answer,d1,d2,d3,explain,level,room]=r;const tail=r.slice(8);const imgName=tail.find(x=>IMGRE.test(x))||'';const hint=tail.find(x=>x&&!IMGRE.test(x))||'';
+    const [prompt,answer,d1,d2,d3,explain,level,room]=r;const tail=r.slice(8);const imgName=tail.find(x=>IMGRE.test(x))||'';const KRE=/^(國考|實務|📘|🏥)/;const kc=tail.find(x=>KRE.test(x))||'';const hint=tail.find(x=>x&&!IMGRE.test(x)&&!KRE.test(x))||'';
     if(!prompt||!answer){errs.push(`第 ${i+1} 行：缺少題目或正確答案`);return}
     const dis=[d1,d2,d3].filter(x=>x&&x!==answer); if(!dis.length){errs.push(`第 ${i+1} 行：至少要有一個錯誤選項`);return}
     const rm=ROOM_BY_NAME(room)||impRoom;
-    const q={room:rm,level:(level||impLevel||'隨機題庫').trim(),type:'choice',prompt,answer,options:[answer,...dis],explain:explain||'',hint:hint||''};
+    const q={room:rm,level:(level||impLevel||'隨機題庫').trim(),type:'choice',prompt,answer,options:[answer,...dis],explain:explain||'',hint:hint||'',kind:/國考|📘/.test(kc)?'exam':/實務|🏥/.test(kc)?'practice':''};
     if(imgName){const f=findImg(imgName);if(f)q.imgFile=f;else warns.push(`第 ${i+1} 行：找不到圖片「${imgName}」（會先匯入文字）`)}
     out.push(q);});
   return {qs:out,errs,warns};
@@ -1574,8 +1586,8 @@ function photosToQs(prompt){const files=[...impImgs.values()];const out=[],errs=
 function importCard(){
   return `<details class="card" id="impd" ${impRows?'open':''}><summary style="font-weight:900;cursor:pointer">📥 批次匯入題目（Excel／CSV）</summary>
   <p class="muted">在 Excel 依下列欄位排好（第一列可以是標題），整段複製貼上，或直接上傳 .xlsx／.csv 檔。</p>
-  <div style="overflow-x:auto"><table class="tpl"><tr><th>A 題目</th><th>B 正確答案</th><th>C 錯誤選項1</th><th>D 錯誤選項2</th><th>E 錯誤選項3</th><th>F 解說</th><th>G 關卡（可空）</th><th>H 科室（可空）</th><th>I 圖片檔名（可空）</th></tr>
-  <tr><td>紫頭 EDTA 管最常用於？</td><td>CBC</td><td>PT/aPTT</td><td>血糖</td><td>生化</td><td>藍頭→凝血…</td><td>採血基本功</td><td>採檢室</td><td>tube01.jpg</td></tr></table></div>
+  <div style="overflow-x:auto"><table class="tpl"><tr><th>A 題目</th><th>B 正確答案</th><th>C 錯誤選項1</th><th>D 錯誤選項2</th><th>E 錯誤選項3</th><th>F 解說</th><th>G 關卡（可空）</th><th>H 科室（可空）</th><th>I 圖片檔名（可空）</th><th>J 類別：國考／實務（可空）</th></tr>
+  <tr><td>紫頭 EDTA 管最常用於？</td><td>CBC</td><td>PT/aPTT</td><td>血糖</td><td>生化</td><td>藍頭→凝血…</td><td>採血基本功</td><td>採檢室</td><td>tube01.jpg</td><td>實務</td></tr></table></div>
   <button class="btn ghost sm" id="tplcp" style="margin-top:8px">📋 複製範本（貼到 Excel）</button>
   <label class="f">沒填科室的題目匯入到</label><div class="chips">${Object.entries(ROOMS).map(([k,r])=>`<button class="chip ${impRoom===k?'on':''}" data-iroom="${k}">${r.ic} ${r.name}</button>`).join('')}</div>
   <label class="f">沒填關卡的題目放進關卡</label><input type="text" id="implv" placeholder="隨機題庫" value="${esc(impLevel)}">
@@ -1594,7 +1606,7 @@ function impPreview(){const {qs,errs,warns=[]}=impRows;const ni=qs.filter(q=>q.i
   ${qs.length?`<button class="btn full" id="impgo" style="margin-top:10px">匯入 ${qs.length} 題</button>`:''}`}
 function bindImport(app){
   const d=$('#impd');if(!d)return;
-  $('#tplcp').onclick=()=>copyText(['題目','正確答案','錯誤選項1','錯誤選項2','錯誤選項3','解說','關卡','科室','圖片檔名'].join('\t')+'\n'+['紫頭 EDTA 管最常用於哪一項檢驗？','全血球計數（CBC）','凝血功能（PT、aPTT）','血糖','血清生化','藍頭→凝血；灰頭→血糖；紅頭、黃頭→生化','採血基本功','採檢室',''].join('\t'));
+  $('#tplcp').onclick=()=>copyText(['題目','正確答案','錯誤選項1','錯誤選項2','錯誤選項3','解說','關卡','科室','圖片檔名','類別'].join('\t')+'\n'+['紫頭 EDTA 管最常用於哪一項檢驗？','全血球計數（CBC）','凝血功能（PT、aPTT）','血糖','血清生化','藍頭→凝血；灰頭→血糖；紅頭、黃頭→生化','採血基本功','採檢室','','實務'].join('\t'));
   app.querySelectorAll('[data-iroom]').forEach(b=>b.onclick=()=>{impRoom=b.dataset.iroom;app.querySelectorAll('[data-iroom]').forEach(x=>x.classList.toggle('on',x===b));if(impRows)check()});
   $('#implv').oninput=e=>{impLevel=e.target.value};
   let lastRows=null;
@@ -1820,17 +1832,18 @@ async function compress(file){
     for(let k=0;k<8;k++){const sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);out=c.toDataURL('image/jpeg',q);if(out.length<180000)return out;if(q>.55)q-=.1;else max=Math.round(max*.85)}
     return out.length<230000?out:null}finally{URL.revokeObjectURL(url)}
 }
-function blankDraft(){return {room:bankRoom,level:'',lvOrder:'',type:'choice',prompt:'',img:'',answer:'',distractors:'',items:'',spot:null,r:8,hint:'',explain:'',inTest:false,order:''}}
+function blankDraft(){return {room:bankRoom,level:'',lvOrder:'',type:'choice',prompt:'',img:'',answer:'',distractors:'',items:'',spot:null,r:8,hint:'',explain:'',inTest:false,order:'',kind:''}}
 function renderBank(app){
   if(!isTeacher){go('hall');return}
   if(bankMode==='shift') return renderShiftBank(app);
   if(!draft){ const q=editing?questions.find(x=>x.id===editing):null;
-    draft=q?{room:q.room,level:q.level||'',lvOrder:q.lvOrder??'',type:q.type,prompt:q.prompt||'',img:q.img||'',answer:q.answer||'',distractors:(q.options||[]).filter(o=>o!==q.answer).join('\n'),items:(q.items||[]).join('\n'),spot:q.spot?{x:q.spot.x,y:q.spot.y}:null,r:q.spot?Math.round(q.spot.r*100):8,hint:q.hint||'',explain:q.explain||'',inTest:!!q.inTest,order:q.order??''}:blankDraft(); }
+    draft=q?{room:q.room,level:q.level||'',lvOrder:q.lvOrder??'',type:q.type,prompt:q.prompt||'',img:q.img||'',answer:q.answer||'',distractors:(q.options||[]).filter(o=>o!==q.answer).join('\n'),items:(q.items||[]).join('\n'),spot:q.spot?{x:q.spot.x,y:q.spot.y}:null,r:q.spot?Math.round(q.spot.r*100):8,hint:q.hint||'',explain:q.explain||'',inTest:!!q.inTest,order:q.order??'',kind:q.kind||''}:blankDraft(); }
   const d=draft; const lvNames=[...new Set(questions.filter(q=>q.room===d.room).map(q=>q.level).filter(Boolean))];
   let h=`<div class="card" id="form"><h3>${editing?'✏️ 編輯題目':'➕ 新增題目'}</h3>
     <label class="f">房間</label><div class="chips">${Object.entries(ROOMS).map(([k,r])=>`<button class="chip ${d.room===k?'on':''}" data-froom="${k}">${r.ic} ${r.name}</button>`).join('')}</div>
     <div class="row" style="align-items:flex-end"><div style="flex:2;min-width:160px"><label class="f">關卡名稱</label><input type="text" id="f_level" list="lvdl" placeholder="例如：採血基本功" value="${esc(d.level)}"><datalist id="lvdl">${lvNames.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></div>
       <div style="flex:1;min-width:90px"><label class="f">關卡順序</label><input type="number" id="f_lvo" placeholder="1" value="${esc(d.lvOrder)}"></div></div>
+    <label class="f">題目類別 <span class="muted" style="font-weight:400">（決定出題比例；圖片題會自動算實務）</span></label><div class="chips">${[['','🤖 自動判斷'+(d.kind?'':'（目前：'+KIND_N[inferKind({...d,img:d.img,type:d.type})]+'）')],['exam',KIND_N.exam],['practice',KIND_N.practice]].map(([k,n])=>`<button class="chip ${(d.kind||'')===k?'on':''}" data-fkind="${k}">${n}</button>`).join('')}</div>
     <label class="f">題型</label><div class="chips">${Object.entries(TYPE_N).map(([k,n])=>`<button class="chip ${d.type===k?'on':''}" data-ftype="${k}">${n}</button>`).join('')}</div>
     <label class="f">題目文字</label><textarea id="f_prompt" placeholder="${d.type==='spot'?'例如：這張心電圖哪裡有問題？請點出來':d.type==='sort'?'例如：請依正確採血順序排列':'例如：箭頭所指的細胞是？'}">${esc(d.prompt)}</textarea>`;
   if(d.type!=='sort'){
@@ -1852,7 +1865,7 @@ function renderBank(app){
   const lv=levelsOf(bankRoom);
   h+=`<div class="row" style="margin:6px 0 10px"><h3 style="margin:0">題庫</h3><span class="muted">共 ${questions.length} 題</span></div>
     <div class="chips" style="margin-bottom:10px">${Object.entries(ROOMS).map(([k,r])=>`<button class="chip ${bankRoom===k?'on':''}" data-lroom="${k}">${r.ic} ${r.name} <span class="muted">${questions.filter(q=>q.room===k).length}</span></button>`).join('')}</div>`;
-  h+=lv.length?lv.map(l=>`<div class="card qlist"><div class="lvhead" data-lvh="${esc(l.name)}"><h3>${esc(l.name)} <span class="muted">（${l.qs.length} 題${l.qs.length>QN?`，每次隨機出 ${QN} 題`:''}）</span></h3><button class="btn ghost sm" data-rnlv="${esc(l.name)}">✏️ 改名／合併</button></div>${l.qs.map(q=>`<div class="item"><div class="thumb">${q.img?`<img src="${q.img}" alt="">`:q.type==='sort'?'🔢':'📝'}</div><div class="t"><b>${esc(q.prompt||q.answer)}</b><span class="tag">${TYPE_N[q.type]}</span></div><button class="btn ghost sm" data-ed="${q.id}">編輯</button><button class="btn warn sm" data-rm="${q.id}">刪</button></div>`).join('')}</div>`).join(''):`<div class="card"><p class="muted" style="margin:0">這個房間還沒有題目。</p></div>`;
+  h+=lv.length?lv.map(l=>`<div class="card qlist"><div class="lvhead" data-lvh="${esc(l.name)}"><h3>${esc(l.name)} <span class="muted">（${l.qs.length} 題${l.qs.length>QN?`，每次隨機出 ${QN} 題`:''}）</span></h3><span class="muted" style="font-size:12px">📘 ${l.qs.filter(q=>kindOf(q)==='exam').length}｜🏥 ${l.qs.filter(q=>kindOf(q)!=='exam').length}</span><button class="btn ghost sm" data-knlv="${esc(l.name)}">🏷 類別</button><button class="btn ghost sm" data-rnlv="${esc(l.name)}">✏️ 改名／合併</button></div>${l.qs.map(q=>`<div class="item"><div class="thumb">${q.img?`<img src="${q.img}" alt="">`:q.type==='sort'?'🔢':'📝'}</div><div class="t"><b>${esc(q.prompt||q.answer)}</b><span class="tag">${TYPE_N[q.type]}</span><span class="tag k-${kindOf(q)}">${KIND_N[kindOf(q)]}${q.kind?'':'·自動'}</span></div><button class="btn ghost sm" data-ed="${q.id}">編輯</button><button class="btn warn sm" data-rm="${q.id}">刪</button></div>`).join('')}</div>`).join(''):`<div class="card"><p class="muted" style="margin:0">這個房間還沒有題目。</p></div>`;
   const keepS=bankScroll(app); app.innerHTML=bankLayout(h,formH,'新增題目'); bankRestore(app,keepS,bankJump); bankJump=false;
   $('#bk_new').onclick=()=>{bankSync&&bankSync();editing=null;const k=draft?{room:draft.room,level:draft.level,lvOrder:draft.lvOrder,type:draft.type}:{};draft={...blankDraft(),...k};bankFormOpen=true;bankJump=true;renderBank(app)};
   $('#bk_back').onclick=()=>{editing=null;draft=null;bankFormOpen=false;renderBank(app)};
@@ -1861,6 +1874,7 @@ function renderBank(app){
   bankSync=sync; bindImport(app); bindBankSwitch(app); bindBackup(app);
   app.querySelectorAll('[data-froom]').forEach(b=>b.onclick=()=>{sync();d.room=b.dataset.froom;renderBank(app)});
   app.querySelectorAll('[data-ftype]').forEach(b=>b.onclick=()=>{sync();d.type=b.dataset.ftype;renderBank(app)});
+  app.querySelectorAll('[data-fkind]').forEach(b=>b.onclick=()=>{sync();d.kind=b.dataset.fkind;renderBank(app)});
   app.querySelectorAll('[data-lroom]').forEach(b=>b.onclick=()=>{sync();bankRoom=b.dataset.lroom;renderBank(app)});
   const useImg=async f=>{if(!f)return;sync();toast('照片處理中…');try{const u=await compress(f);if(!u)return toast('照片太大，請換一張');d.img=u;d.spot=null;renderBank(app);toast('照片已載入')}catch(err){toast('無法讀取這張照片')}};
   window._bankPasteImg=$('#form')?useImg:null;
@@ -1872,7 +1886,7 @@ function renderBank(app){
   if($('#f_r')) $('#f_r').oninput=e=>{d.r=+e.target.value;$('#rv').textContent=d.r;const m=$('#f_spot .mark');if(m)m.style.width=(d.r*2)+'%'};
   if($('#f_cancel')) $('#f_cancel').onclick=()=>{editing=null;draft=null;bankFormOpen=false;renderBank(app)};
   $('#f_save').onclick=async()=>{sync();
-    const data={room:d.room,level:d.level.trim()||'第一關',lvOrder:d.lvOrder===''?1:+d.lvOrder,type:d.type,prompt:d.prompt.trim(),hint:d.hint.trim(),explain:d.explain.trim(),inTest:!!d.inTest,order:d.order===''?(questions.filter(q=>q.room===d.room&&q.level===d.level.trim()).length+1):+d.order,created:editing?(questions.find(q=>q.id===editing)?.created||Date.now()):Date.now()};
+    const data={kind:d.kind||'',room:d.room,level:d.level.trim()||'第一關',lvOrder:d.lvOrder===''?1:+d.lvOrder,type:d.type,prompt:d.prompt.trim(),hint:d.hint.trim(),explain:d.explain.trim(),inTest:!!d.inTest,order:d.order===''?(questions.filter(q=>q.room===d.room&&q.level===d.level.trim()).length+1):+d.order,created:editing?(questions.find(q=>q.id===editing)?.created||Date.now()):Date.now()};
     if(d.type==='choice'){const a=d.answer.trim();if(!a)return toast('請填正確答案');const dis=d.distractors.split('\n').map(s=>s.trim()).filter(s=>s&&s!==a);if(!dis.length&&d.room!=='micro'&&d.room!=='blood')return toast('請至少填一個錯誤選項');data.answer=a;data.options=[a,...dis].slice(0,6);if(d.img)data.img=d.img}
     if(d.type==='sort'){const items=d.items.split('\n').map(s=>s.trim()).filter(Boolean);if(items.length<3)return toast('排序題至少要 3 個項目');data.items=items.slice(0,8)}
     if(d.type==='spot'){if(!d.img)return toast('請放一張圖片');if(!d.spot)return toast('請在圖片上點出錯誤位置');data.img=d.img;data.spot={x:d.spot.x,y:d.spot.y,r:d.r/100}}
@@ -1880,6 +1894,11 @@ function renderBank(app){
     try{ if(editing) await db.doc('questions/'+editing).set(data); else await db.collection('questions').doc('q'+uid()).set(data);
       toast(editing?'已更新':'已新增 ✅'); if(editing)bankFormOpen=false; const keep={room:d.room,level:d.level,lvOrder:d.lvOrder,type:d.type}; editing=null; draft={...blankDraft(),...keep}; bankRoom=d.room; renderBank(app);
     }catch(e){b.disabled=false;b.textContent='再試一次';toast(e?.code==='quota_exceeded'?'空間已滿，請刪除一些題目':'儲存失敗，請再試一次')}};
+  app.querySelectorAll('[data-knlv]').forEach(b=>b.onclick=()=>{const nm=b.dataset.knlv,box=b.closest('.lvhead');
+    box.innerHTML=`<div style="flex:1;min-width:0"><b>「${esc(nm)}」整關設為：</b><div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="btn sm" data-setk="exam">📘 全部國考</button><button class="btn sm" data-setk="practice">🏥 全部實務</button><button class="btn ghost sm" data-setk="">🤖 全部自動判斷</button><button class="btn ghost sm" id="kn_no">取消</button></div><p class="muted" style="margin:6px 0 0;font-size:13px">之後還是可以單題修改。圖片題設成自動判斷時會算實務。</p></div>`;
+    $('#kn_no').onclick=()=>renderBank(app);
+    box.querySelectorAll('[data-setk]').forEach(x=>x.onclick=async()=>{const k=x.dataset.setk,L=levelsOf(bankRoom).find(z=>z.name===nm);if(!L)return renderBank(app);x.disabled=true;x.textContent='更新中…';
+      try{await Promise.all(L.qs.map(q=>{const r=db.doc('questions/'+q.id),dd={kind:k};return r.update?r.update(dd):r.set(dd,{merge:true})}));L.qs.forEach(q=>q.kind=k);toast(`已更新 ${L.qs.length} 題 ✅`);renderBank(app)}catch(e){toast('更新失敗，請再試一次');renderBank(app)}})});
   app.querySelectorAll('[data-rnlv]').forEach(b=>b.onclick=()=>{const old=b.dataset.rnlv,box=b.closest('.lvhead'),others=levelsOf(bankRoom).map(x=>x.name).filter(n=>n!==old);
     box.innerHTML=`<div style="flex:1;min-width:0"><label class="f" style="margin-top:0">類別新名稱</label><input type="text" id="rn_in" value="${esc(old)}" list="rn_dl"><datalist id="rn_dl">${others.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
       <p class="muted" style="margin:6px 0 0;font-size:13px">${others.length?`想合併就輸入另一個類別的名稱（例如「${esc(others[0])}」），這類的題目會全部併過去。`:'改完按儲存。'}</p>
