@@ -587,7 +587,7 @@ body[data-view=shift] main#app{display:flex;flex-direction:column;overflow:hidde
   <span id="tabs" class="row" style="gap:6px"></span>
 </div></header>
 <main id="app"><div class="card" style="text-align:center"><p class="muted">實驗室開門中…</p></div></main>
-<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v25</footer>
+<footer class="copy">健仁醫院檢驗科版權所有(C) MTR TAI YI CHIEN · v26</footer>
 <div class="toast" id="toast"></div>
 <div id="instbar" style="display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:70;background:#1E2550;color:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.3);font-size:14px;line-height:1.5">
   <div style="display:flex;gap:10px;align-items:center"><img src="icon-192.png" alt="" style="width:40px;height:40px;border-radius:10px"><div style="flex:1" id="insttxt"></div>
@@ -1202,7 +1202,7 @@ let mode=LS.get('dl_mode','learn'), shift=null, shiftTimer=null;
 const clockStr=t=>{const m=(SHIFT_START+Math.floor(t))%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
 const avatarSvgOld=`<svg viewBox="0 0 38 44" width="38" height="44"><circle cx="19" cy="11" r="8" fill="#FFD9B8"/><path d="M11 9c1-6 15-7 16 0-4-2-12-2-16 0z" fill="#3B2F2A"/><circle cx="16" cy="12" r="1.2" fill="#22212B"/><circle cx="22" cy="12" r="1.2" fill="#22212B"/><path d="M8 40c0-11 4-18 11-18s11 7 11 18z" fill="#fff" stroke="#C9CEF2"/><path d="M19 22v18" stroke="#C9CEF2"/><rect x="21" y="27" width="5" height="4" rx="1" fill="#5A8DEE"/><rect x="12" y="38" width="5" height="5" rx="2" fill="#3A4AA6"/><rect x="21" y="38" width="5" height="5" rx="2" fill="#3A4AA6"/></svg>`;
 function bestShift(){return myResults().filter(r=>r.kind==='shift').reduce((m,r)=>Math.max(m,r.points||0),null)}
-function svBar(){const done=LS.get('dl_sv_'+svType(),null);return `<button class="hbtn svbar" id="svb"><span class="svi">📝</span><span class="svt"><b>滿意度調查${done?' ✅':''}</b><small>${done?'已填寫，謝謝！':(svType()==='staff'?'醫檢師：評估值班遊戲':'告訴我們你在學習模式和值班模式學到什麼')}</small></span><span class="sva">›</span></button>`}
+function svBar(){const done=LS.get('dl_sv_'+svType(),null);return `<button class="hbtn svbar" id="svb"><span class="svi">📝</span><span class="svt"><b>滿意度調查${done?' ✅':''}</b><small>${done?'已填寫，謝謝！':(svType()==='staff'?'醫檢師：評估學習模式與值班模式':'告訴我們你在學習模式和值班模式學到什麼')}</small></span><span class="sva">›</span></button>`}
 function bindSv(){const b=$('#svb');if(b)b.onclick=()=>go('survey')}
 function renderSoon(m){const t=m==='flow'?{ic:'🔁',name:'流程模式',d:'把檢驗科的作業流程一步一步排出來，練習「下一步該做什麼」。'}:{ic:'📋',name:'TAF來了',d:'模擬 TAF 認證評審來訪，練習回答評審提問、找出文件與紀錄。'};
   return `<div class="card soon" style="text-align:center;padding:28px 18px"><div style="font-size:52px;line-height:1">🚧</div><h3 style="margin:12px 0 6px">${t.ic} ${t.name}</h3><div style="display:inline-block;background:#FFE7A8;color:#7A4B00;font-weight:900;border-radius:999px;padding:4px 14px;font-size:14px">建構中</div><p class="muted" style="margin:14px 0 0;line-height:1.6">${t.d}<br>實驗室正在施工，敬請期待！</p></div>`}
@@ -1396,9 +1396,9 @@ const SURVEYS={
   learner:{title:'學員滿意度調查',who:'實習生、PGY',intro:'玩過學習模式和值班模式之後，告訴我們你的感受與收穫。約 2 分鐘。',
     likert:['學習模式的關卡讓我更了解檢驗工作的細節','答題後的解說清楚，讓我知道自己錯在哪裡','值班模式讓我體會到實際值班時的處理順序與時間壓力','遊戲化的方式提高了我的學習動機','我會在課後主動用這個遊戲複習','整體而言，我對細節實驗室感到滿意'],
     open:['透過「學習模式」，我學到了什麼？','透過「值班模式」，我學到了什麼？','你最喜歡的地方，或希望改進的地方？']},
-  staff:{title:'值班遊戲滿意度調查',who:'醫檢師',intro:'以在職醫檢師的角度，評估值班模式的情境與設計。約 2 分鐘。',
-    likert:['值班模式的情境貼近臨床實際狀況','事件的處理選項與解說符合單位作業規範','值班模式有助於複習危急值、檢體品質等重要流程','尖峰時段的設計能練習判斷處理的優先順序','遊戲操作簡單、容易上手','我願意推薦這個遊戲給新進同仁或學生使用','整體而言，我對值班遊戲感到滿意'],
-    open:['值班遊戲中，哪個情境最貼近你的實際經驗？','你建議新增哪些值班情境？','其他建議']}
+  staff:{title:'醫檢師滿意度調查',who:'醫檢師',intro:'以在職醫檢師的角度，評估學習模式與值班模式的內容與設計。約 2 分鐘。',
+    likert:['學習模式的題目與解說內容正確，符合單位作業規範','學習模式有助於複習各組的檢驗細節','值班模式的情境貼近臨床實際狀況','值班模式有助於複習危急值、檢體品質等重要流程','尖峰時段與事件分級的設計，能練習判斷處理的優先順序','遊戲操作簡單、容易上手','我願意推薦這個遊戲給新進同仁或學生使用','整體而言，我對細節實驗室感到滿意'],
+    open:['學習模式中，你建議新增或修改哪些題目？','值班模式中，哪個情境最貼近你的實際經驗？你建議新增哪些情境？','其他建議']}
 };
 let surveys=[], svDraft=null;
 const svType=()=>(player?.role==='醫檢師'||player?.role==='在職人員')?'staff':'learner';
@@ -1533,7 +1533,8 @@ let adminSubs=false;
 function startAdminSubs(){if(adminSubs||!db)return;adminSubs=true;db.collection('surveys').onSnapshot(s=>{surveys=s.docs.map(d=>({_id:d.id,...d.data()}));if(view==='scores')render()},e=>{})}
 /* ===== 問卷設定（管理員） ===== */
 const SURVEY_DEFAULT=JSON.parse(JSON.stringify(SURVEYS));
-function applySurveyConfig(cfg){['learner','staff'].forEach(t=>{const c=cfg?.[t];SURVEYS[t]={...SURVEY_DEFAULT[t],...(c||{})}})}
+const OLD_STAFF_LIKERT='["值班模式的情境貼近臨床實際狀況","事件的處理選項與解說符合單位作業規範","值班模式有助於複習危急值、檢體品質等重要流程","尖峰時段的設計能練習判斷處理的優先順序","遊戲操作簡單、容易上手","我願意推薦這個遊戲給新進同仁或學生使用","整體而言，我對值班遊戲感到滿意"]';
+function applySurveyConfig(cfg){['learner','staff'].forEach(t=>{let c=cfg?.[t];if(t==='staff'&&c&&JSON.stringify(c.likert||[])===OLD_STAFF_LIKERT)c=null;SURVEYS[t]={...SURVEY_DEFAULT[t],...(c||{})}})}
 function renderSvEdit(app){
   if(!isTeacher){go('hall');return}
   app.innerHTML=`<div class="svewrap"><div class="svehead"><h2>問卷設定</h2><p class="muted">一行一題。修改後，新填寫的問卷就會用新題目；舊的回覆仍保留當時的題目，統計時會依題目文字對應。</p></div>
